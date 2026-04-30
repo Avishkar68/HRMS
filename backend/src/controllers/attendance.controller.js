@@ -107,7 +107,6 @@ export const todayStatus = async (req, res) => {
       userId,
       date: todayStr
     });
-console.log("AUTH USER:", req.user);
 
     return res.json(attendance || null);
 

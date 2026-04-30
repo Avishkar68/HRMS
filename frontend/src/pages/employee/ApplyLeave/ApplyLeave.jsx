@@ -1,33 +1,17 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 
 const ApplyLeave = () => {
-  const [form, setForm] = useState({
-    leaveTypeId: "",
-    fromDate: "",
-    toDate: "",
-    reason: ""
-  });
-
+  const [form, setForm] = useState({ leaveTypeId: "", fromDate: "", toDate: "", reason: "" });
   const [leaves, setLeaves] = useState([]);
   const [balances, setBalances] = useState([]);
 
-  const token = localStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
-
   const fetchLeaves = async () => {
-    const res = await axios.get(
-      "http://localhost:3000/api/leave/my",
-      { headers }
-    );
+    const res = await api.get("/leave/my");
     setLeaves(res.data);
   };
-
   const fetchBalances = async () => {
-    const res = await axios.get(
-      "http://localhost:3000/api/leave/balance",
-      { headers }
-    );
+    const res = await api.get("/leave/balance");
     setBalances(res.data);
   };
 
@@ -36,140 +20,109 @@ const ApplyLeave = () => {
     fetchBalances();
   }, []);
 
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
     try {
-      await axios.post(
-        "http://localhost:3000/api/leave/apply",
-        form,
-        { headers }
-      );
-
+      await api.post("/leave/apply", form);
       alert("Leave applied");
-      setForm({
-        leaveTypeId: "",
-        fromDate: "",
-        toDate: "",
-        reason: ""
-      });
-
+      setForm({ leaveTypeId: "", fromDate: "", toDate: "", reason: "" });
       fetchLeaves();
       fetchBalances();
-
     } catch (err) {
       alert(err.response?.data?.message || "Error");
     }
   };
 
   const badgeColor = (status) => {
-    if (status === "approved") return "bg-green-100 text-green-700";
-    if (status === "rejected") return "bg-red-100 text-red-700";
-    return "bg-yellow-100 text-yellow-700";
+    if (status === "approved") return "bg-emerald-100 text-emerald-800";
+    if (status === "rejected") return "bg-red-100 text-red-800";
+    return "bg-amber-100 text-amber-800";
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Apply Leave</h1>
+        <p className="text-gray-500 text-sm mt-1">Submit a leave request</p>
+      </div>
 
-      {/* ===== LEAVE BALANCE ===== */}
-      <div className="grid grid-cols-2 gap-4 max-w-xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {balances.map((b) => (
-          <div key={b.leaveTypeId} className="bg-white p-4 rounded shadow">
-            <h3 className="font-semibold">{b.leaveType}</h3>
-            <p className="text-sm text-gray-600">
-              Remaining: <b>{b.remaining}</b> days
-            </p>
+          <div key={b.leaveTypeId} className="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+            <h3 className="font-semibold text-gray-900">{b.leaveType}</h3>
+            <p className="text-sm text-gray-500 mt-1">Remaining: <strong className="text-gray-900">{b.remaining}</strong> days</p>
           </div>
         ))}
       </div>
 
-      {/* ===== APPLY FORM ===== */}
-      <div className="bg-white p-6 rounded shadow w-96">
-        <h2 className="font-bold mb-4">Apply Leave</h2>
-
-        <select
-          name="leaveTypeId"
-          className="w-full border p-2 mb-2"
-          value={form.leaveTypeId}
-          onChange={handleChange}
-        >
-          <option value="">Select Leave Type</option>
-          {balances.map((b) => (
-            <option key={b.leaveTypeId} value={b.leaveTypeId}>
-              {b.leaveType}
-            </option>
-          ))}
-        </select>
-
-        <input
-          type="date"
-          name="fromDate"
-          className="w-full border p-2 mb-2"
-          value={form.fromDate}
-          onChange={handleChange}
-        />
-
-        <input
-          type="date"
-          name="toDate"
-          className="w-full border p-2 mb-2"
-          value={form.toDate}
-          onChange={handleChange}
-        />
-
-        <textarea
-          name="reason"
-          placeholder="Reason"
-          className="w-full border p-2 mb-4"
-          value={form.reason}
-          onChange={handleChange}
-        />
-
-        <button
-          onClick={handleSubmit}
-          className="bg-black text-white px-4 py-2 w-full"
-          disabled={!form.leaveTypeId}
-        >
-          Submit Leave
-        </button>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden max-w-lg">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900">New leave request</h2>
+        </div>
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Leave type</label>
+            <select name="leaveTypeId" value={form.leaveTypeId} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required>
+              <option value="">Select leave type</option>
+              {balances.map((b) => (
+                <option key={b.leaveTypeId} value={b.leaveTypeId}>{b.leaveType}</option>
+              ))}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
+              <input type="date" name="fromDate" value={form.fromDate} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
+              <input type="date" name="toDate" value={form.toDate} onChange={handleChange} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" required />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+            <textarea name="reason" value={form.reason} onChange={handleChange} placeholder="Reason" rows={3} className="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          </div>
+          <button onClick={handleSubmit} disabled={!form.leaveTypeId || !form.fromDate || !form.toDate} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed">
+            Submit leave
+          </button>
+        </div>
       </div>
 
-      {/* ===== MY LEAVES ===== */}
-      <div className="bg-white p-6 rounded shadow">
-        <h2 className="font-bold mb-4">My Leave Requests</h2>
-
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900">My leave requests</h2>
+        </div>
         {leaves.length === 0 ? (
-          <p className="text-gray-500 text-sm">No leave requests yet</p>
+          <div className="p-8 text-center text-gray-500">No leave requests yet.</div>
         ) : (
-          <table className="w-full border text-sm">
-            <thead>
-              <tr>
-                <th className="border p-2">From</th>
-                <th className="border p-2">To</th>
-                <th className="border p-2">Days</th>
-                <th className="border p-2">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaves.map((l) => (
-                <tr key={l._id} className="text-center">
-                  <td className="border p-2">{l.fromDate}</td>
-                  <td className="border p-2">{l.toDate}</td>
-                  <td className="border p-2">{l.totalDays}</td>
-                  <td className="border p-2">
-                    <span className={`px-2 py-1 rounded text-xs ${badgeColor(l.status)}`}>
-                      {l.status}
-                    </span>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left p-3 font-semibold text-gray-700">From</th>
+                  <th className="text-left p-3 font-semibold text-gray-700">To</th>
+                  <th className="text-left p-3 font-semibold text-gray-700">Days</th>
+                  <th className="text-left p-3 font-semibold text-gray-700">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {leaves.map((l) => (
+                  <tr key={l._id} className="hover:bg-gray-50/50">
+                    <td className="p-3 font-medium text-gray-900">{l.fromDate}</td>
+                    <td className="p-3 text-gray-600">{l.toDate}</td>
+                    <td className="p-3 text-gray-600">{l.totalDays}</td>
+                    <td className="p-3">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${badgeColor(l.status)}`}>{l.status}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
-
     </div>
   );
 };

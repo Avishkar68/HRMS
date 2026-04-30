@@ -2,6 +2,49 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.model.js";
 import LeaveType from "../models/LeaveType.model.js";
 import LeaveBalance from "../models/LeaveBalance.model.js";
+import Leave from "../models/Leave.model.js";
+import Attendance from "../models/Attendance.model.js";
+
+const getLocalDateString = () => {
+  const now = new Date();
+  const offsetMs = now.getTimezoneOffset() * 60000;
+  return new Date(now - offsetMs).toISOString().split("T")[0];
+};
+
+export const getDashboardStats = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const today = getLocalDateString();
+    const [userCount, pendingLeaves, presentToday, managerCount, employeeCount] = await Promise.all([
+      User.countDocuments({ companyId }),
+      Leave.countDocuments({ companyId, status: "pending" }),
+      Attendance.countDocuments({ companyId, date: today }),
+      User.countDocuments({ companyId, role: "manager" }),
+      User.countDocuments({ companyId, role: "employee" }),
+    ]);
+    res.json({
+      userCount,
+      pendingLeaves,
+      presentToday,
+      managerCount,
+      employeeCount,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const getUsers = async (req, res) => {
+  try {
+    const users = await User.find({ companyId: req.user.companyId })
+      .select("-passwordHash")
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 export const createUser = async (req, res) => {
   try {
@@ -34,8 +77,8 @@ export const createUser = async (req, res) => {
       }
     }
 
-    // ❌ Duplicate email
-    const exists = await User.findOne({ email });
+    // ❌ Duplicate email (per company)
+    const exists = await User.findOne({ companyId: req.user.companyId, email });
     if (exists) {
       return res.status(400).json({ message: "User already exists" });
     }

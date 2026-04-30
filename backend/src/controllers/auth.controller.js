@@ -3,6 +3,20 @@ import User from "../models/User.model.js";
 import SuperAdmin from "../models/SuperAdmin.model.js";
 import { generateToken } from "../utils/jwt.js";
 
+/* ================= GET CURRENT USER (EMPLOYEE/MANAGER/ADMIN) ================= */
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .select("-passwordHash")
+      .populate("managerId", "name email")
+      .lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 /* ================= USER LOGIN ================= */
 export const login = async (req, res) => {
   try {
@@ -19,9 +33,10 @@ export const login = async (req, res) => {
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 
+    const role = (user.role || "").toString().toLowerCase();
     const token = generateToken({
       id: user._id,
-      role: user.role,
+      role,
       companyId: user.companyId
     });
 
@@ -29,7 +44,7 @@ export const login = async (req, res) => {
       token,
       user: {
         id: user._id,
-        role: user.role,
+        role,
         companyId: user.companyId
       }
     });

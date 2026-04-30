@@ -1,23 +1,14 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 
 const TeamAttendance = () => {
   const [todayData, setTodayData] = useState([]);
   const [selectedEmp, setSelectedEmp] = useState(null);
   const [monthData, setMonthData] = useState([]);
-  const [month, setMonth] = useState(
-    new Date().toISOString().slice(0, 7)
-  );
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
 
-  const token = localStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
-
-  /* ===== FETCH TODAY TEAM ATTENDANCE ===== */
   const fetchToday = async () => {
-    const res = await axios.get(
-      "http://localhost:3000/api/manager/team-attendance/today",
-      { headers }
-    );
+    const res = await api.get("/manager/team-attendance/today");
     setTodayData(res.data);
   };
 
@@ -25,113 +16,93 @@ const TeamAttendance = () => {
     fetchToday();
   }, []);
 
-  /* ===== FETCH EMPLOYEE MONTH ===== */
   const fetchEmployeeMonth = async (userId, selectedMonth = month) => {
-    const res = await axios.get(
-      `http://localhost:3000/api/manager/employee-attendance/${userId}?month=${selectedMonth}`,
-      { headers }
-    );
+    const res = await api.get(`/manager/employee-attendance/${userId}?month=${selectedMonth}`);
     setMonthData(res.data);
   };
 
-  /* 🔥 REFETCH WHEN MONTH CHANGES */
   useEffect(() => {
-    if (selectedEmp) {
-      fetchEmployeeMonth(selectedEmp.userId, month);
-    }
+    if (selectedEmp) fetchEmployeeMonth(selectedEmp.userId, month);
   }, [month]);
 
   const badgeColor = (status) => {
-    if (status === "present") return "bg-green-100 text-green-700";
-    if (status === "late") return "bg-yellow-100 text-yellow-700";
-    if (status === "on_leave") return "bg-blue-100 text-blue-700";
-    return "bg-red-100 text-red-700";
+    if (status === "present") return "bg-emerald-100 text-emerald-800";
+    if (status === "late") return "bg-amber-100 text-amber-800";
+    if (status === "on_leave") return "bg-blue-100 text-blue-800";
+    return "bg-gray-100 text-gray-700";
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-bold mb-4">Today’s Team Attendance</h2>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Team Attendance</h1>
+        <p className="text-gray-500 text-sm mt-1">Today’s attendance and monthly view</p>
+      </div>
 
-      <table className="w-full border text-sm">
-        <thead>
-          <tr>
-            <th className="border p-2">Employee</th>
-            <th className="border p-2">Status</th>
-            <th className="border p-2">Check In</th>
-            <th className="border p-2">Check Out</th>
-            <th className="border p-2">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {todayData.map((e) => (
-            <tr key={e.userId} className="text-center">
-              <td className="border p-2">{e.name}</td>
-              <td className="border p-2">
-                <span
-                  className={`px-2 py-1 rounded text-xs ${badgeColor(e.status)}`}
-                >
-                  {e.status}
-                </span>
-              </td>
-              <td className="border p-2">{e.checkInTime || "--"}</td>
-              <td className="border p-2">{e.checkOutTime || "--"}</td>
-              <td className="border p-2">
-                <button
-                  onClick={() => {
-                    setSelectedEmp(e);
-                    fetchEmployeeMonth(e.userId);
-                  }}
-                  className="text-blue-600 underline"
-                >
-                  View Month
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* ===== MONTH MODAL ===== */}
-      {selectedEmp && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded w-[600px] h-[600px] overflow-scroll">
-            <div className="flex justify-between mb-3">
-              <h3 className="font-bold">
-                {selectedEmp.name} – Monthly Attendance
-              </h3>
-              <button onClick={() => setSelectedEmp(null)}>✕</button>
-            </div>
-
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              className="border p-1 mb-3"
-            />
-
-            <table className="w-full border text-sm">
-              <thead>
-                <tr>
-                  <th className="border p-2">Date</th>
-                  <th className="border p-2">Status</th>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="p-4 border-b border-gray-100">
+          <h2 className="text-lg font-bold text-gray-900">Today’s team</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left p-4 font-semibold text-gray-700">Employee</th>
+                <th className="text-left p-4 font-semibold text-gray-700">Status</th>
+                <th className="text-left p-4 font-semibold text-gray-700">Check In</th>
+                <th className="text-left p-4 font-semibold text-gray-700">Check Out</th>
+                <th className="text-left p-4 font-semibold text-gray-700">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {todayData.map((e) => (
+                <tr key={e.userId} className="hover:bg-gray-50/50">
+                  <td className="p-4 font-medium text-gray-900">{e.name}</td>
+                  <td className="p-4">
+                    <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${badgeColor(e.status)}`}>{e.status}</span>
+                  </td>
+                  <td className="p-4 text-gray-600">{e.checkInTime || "—"}</td>
+                  <td className="p-4 text-gray-600">{e.checkOutTime || "—"}</td>
+                  <td className="p-4">
+                    <button onClick={() => { setSelectedEmp(e); fetchEmployeeMonth(e.userId); }} className="text-indigo-600 hover:underline text-xs font-medium">View month</button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {monthData.map((d) => (
-                  <tr key={d.date} className="text-center">
-                    <td className="border p-2">{d.date}</td>
-                    <td className="border p-2">
-                      <span
-                        className={`px-2 py-1 rounded text-xs ${badgeColor(d.status)}`}
-                      >
-                        {d.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
+      {selectedEmp && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-20 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">{selectedEmp.name} – Monthly attendance</h3>
+              <button onClick={() => setSelectedEmp(null)} className="text-gray-500 hover:text-gray-700 text-xl leading-none">×</button>
+            </div>
+            <div className="p-4 border-b border-gray-100">
+              <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="border border-gray-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="text-left p-3 font-semibold text-gray-700">Date</th>
+                    <th className="text-left p-3 font-semibold text-gray-700">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {monthData.map((d) => (
+                    <tr key={d.date} className="hover:bg-gray-50/50">
+                      <td className="p-3 font-medium text-gray-900">{d.date}</td>
+                      <td className="p-3">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${badgeColor(d.status)}`}>{d.status}</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

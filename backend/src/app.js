@@ -12,6 +12,10 @@ import managerLeaveRoutes from "./routes/managerLeave.routes.js";
 import adminLeaveRoutes from "./routes/adminLeave.routes.js";
 import leaveTypeRoutes from "./routes/leaveType.routes.js";
 import leaveBalanceRoutes from "./routes/leaveBalance.routes.js";
+import departmentRoutes from "./routes/department.routes.js";
+import payrollRoutes from "./routes/payroll.routes.js";
+import documentRoutes from "./routes/document.routes.js";
+import adminReportsRoutes from "./routes/adminReports.routes.js";
 
 const app = express();
 
@@ -35,6 +39,9 @@ app.use("/api/manager", managerLeaveRoutes);
 app.use("/api/admin", adminLeaveRoutes);
 app.use("/api/admin", leaveTypeRoutes);
 app.use("/api/leave", leaveBalanceRoutes);
-app.use("/api/manager", managerAttendanceRoutes);
+app.use("/api/admin/departments", departmentRoutes);
+app.use("/api/admin/documents", documentRoutes);
+app.use("/api/admin/reports", adminReportsRoutes);
+app.use("/api/payroll", payrollRoutes);
 
 export default app;

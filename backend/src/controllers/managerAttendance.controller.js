@@ -12,6 +12,39 @@ const getLocalDateString = () => {
   return new Date(now - offsetMs).toISOString().split("T")[0];
 };
 
+/* ================= DASHBOARD STATS ================= */
+export const getDashboardStats = async (req, res) => {
+  try {
+    const companyId = req.user.companyId;
+    const managerId = req.user.id;
+    const today = getLocalDateString();
+
+    const teamMembers = await User.find({ companyId, managerId }).select("_id");
+    const teamCount = teamMembers.length;
+    const userIds = teamMembers.map((u) => u._id);
+
+    const presentToday = await Attendance.countDocuments({
+      companyId,
+      userId: { $in: userIds },
+      date: today,
+    });
+
+    const pendingLeaves = await Leave.countDocuments({
+      companyId,
+      managerId,
+      status: "pending",
+    });
+
+    res.json({
+      teamCount,
+      presentToday,
+      pendingLeaves,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 /* ================= TODAY TEAM ATTENDANCE ================= */
 /* ================= TODAY TEAM ATTENDANCE ================= */
 export const getTodayTeamAttendance = async (req, res) => {

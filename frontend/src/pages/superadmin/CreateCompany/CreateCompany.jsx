@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 
 const CreateCompany = () => {
   const [form, setForm] = useState({
@@ -18,28 +18,21 @@ const CreateCompany = () => {
     e.preventDefault();
 
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.post(
-        "http://localhost:3000/api/superadmin/company",
-        form,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
-
+      await api.post("/superadmin/company", form);
       alert("Company Created Successfully");
-      console.log(res.data);
     } catch (err) {
       alert(err.response?.data?.message || "Error creating company");
     }
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow max-w-md">
-      <h2 className="text-lg font-bold mb-4">Create Company</h2>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Create Company</h1>
+        <p className="text-gray-500 text-sm mt-1">Register a new company and its admin</p>
+      </div>
+    <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 max-w-lg">
+      <h2 className="text-lg font-bold text-gray-900 mb-4">Company details</h2>
 
       {["companyName", "domain", "adminName", "adminEmail", "adminPassword"].map(
         (field) => (
@@ -55,10 +48,11 @@ const CreateCompany = () => {
 
       <button
         onClick={handleSubmit}
-        className="bg-black text-white w-full py-2"
+        className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700"
       >
-        Create
+        Create Company
       </button>
+    </div>
     </div>
   );
 };

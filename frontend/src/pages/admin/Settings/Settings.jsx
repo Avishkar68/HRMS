@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../utils/api";
 
 const Settings = () => {
   const [types, setTypes] = useState([]);
@@ -8,14 +8,8 @@ const Settings = () => {
     yearlyQuota: ""
   });
 
-  const token = localStorage.getItem("token");
-  const headers = { Authorization: `Bearer ${token}` };
-
   const fetchTypes = async () => {
-    const res = await axios.get(
-      "http://localhost:3000/api/admin/leave-types",
-      { headers }
-    );
+    const res = await api.get("/admin/leave-types");
     setTypes(res.data);
   };
 
@@ -29,11 +23,7 @@ const Settings = () => {
 
   const handleCreate = async () => {
     try {
-      await axios.post(
-        "http://localhost:3000/api/admin/leave-types",
-        form,
-        { headers }
-      );
+      await api.post("/admin/leave-types", form);
 
       alert("Leave type created");
       setForm({ name: "", yearlyQuota: "" });
@@ -44,11 +34,14 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-xl">
-      <h1 className="text-xl font-bold">Leave Settings</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-500 text-sm mt-1">Leave types and quotas</p>
+      </div>
 
       {/* ===== CREATE LEAVE TYPE ===== */}
-      <div className="bg-white p-6 rounded shadow">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h2 className="font-semibold mb-4">Add Leave Type</h2>
 
         <input
@@ -77,7 +70,7 @@ const Settings = () => {
       </div>
 
       {/* ===== LIST LEAVE TYPES ===== */}
-      <div className="bg-white p-6 rounded shadow">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
         <h2 className="font-semibold mb-4">Existing Leave Types</h2>
 
         {types.length === 0 ? (
