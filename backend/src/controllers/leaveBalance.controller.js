@@ -5,11 +5,35 @@ export const getMyLeaveBalance = async (req, res) => {
   try {
     const year = new Date().getFullYear();
 
-    const balances = await LeaveBalance.find({
+    let balances = await LeaveBalance.find({
       companyId: req.user.companyId,
       userId: req.user.id,
       year
     }).lean();
+
+    if (balances.length === 0) {
+      const leaveTypes = await LeaveType.find({
+        companyId: req.user.companyId
+      }).lean();
+
+      if (leaveTypes.length > 0) {
+        const newBalances = leaveTypes.map(type => ({
+          companyId: req.user.companyId,
+          userId: req.user.id,
+          leaveTypeId: type._id,
+          year,
+          total: type.yearlyQuota,
+          used: 0,
+          remaining: type.yearlyQuota
+        }));
+        await LeaveBalance.insertMany(newBalances);
+        balances = await LeaveBalance.find({
+          companyId: req.user.companyId,
+          userId: req.user.id,
+          year
+        }).lean();
+      }
+    }
 
     const leaveTypeIds = balances.map(b => b.leaveTypeId);
 

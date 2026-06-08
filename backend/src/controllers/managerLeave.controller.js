@@ -1,6 +1,7 @@
 import Leave from "../models/Leave.model.js";
 import User from "../models/User.model.js";
 import LeaveBalance from "../models/LeaveBalance.model.js";
+import LeaveType from "../models/LeaveType.model.js";
 
 export const getTeamLeaves = async (req, res) => {
     try {
@@ -23,9 +24,21 @@ export const getTeamLeaves = async (req, res) => {
             userMap[u._id.toString()] = u;
         });
 
+        // attach leave type info
+        const leaveTypeIds = leaves.map(l => l.leaveTypeId).filter(Boolean);
+        const leaveTypes = await LeaveType.find(
+            { _id: { $in: leaveTypeIds } }
+        ).lean();
+
+        const leaveTypeMap = {};
+        leaveTypes.forEach(lt => {
+            leaveTypeMap[lt._id.toString()] = lt;
+        });
+
         const result = leaves.map(l => ({
             ...l,
-            employee: userMap[l.userId.toString()]
+            employee: userMap[l.userId.toString()],
+            leaveType: l.leaveTypeId ? leaveTypeMap[l.leaveTypeId.toString()] : null
         }));
 
         res.json(result);
