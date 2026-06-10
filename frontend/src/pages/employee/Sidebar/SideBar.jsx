@@ -31,9 +31,9 @@ const SideBar = () => {
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col justify-between flex-shrink-0">
+    <aside className="w-64 h-screen sticky top-0 bg-white border-r border-gray-200 flex flex-col justify-between flex-shrink-0">
       {/* Upper Navigation block */}
-      <div className="flex flex-col">
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Brand header */}
         <div className="p-6 border-b border-gray-100 flex items-center gap-2 bg-gradient-to-br from-slate-50 to-white">
           <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
@@ -46,7 +46,7 @@ const SideBar = () => {
         </div>
 
         {/* Links */}
-        <nav className="flex flex-col gap-2 p-4 pt-6">
+        <nav className="flex flex-col gap-2 p-4 pt-6 flex-1 overflow-y-auto min-h-0">
           <NavLink to="/employee/profile" className={navLinkStyle}>
             <User className="w-4 h-4" />
             My Profile
@@ -55,7 +55,7 @@ const SideBar = () => {
             <MapPin className="w-4 h-4" />
             Mark Attendance
           </NavLink>
-          <NavLink to="/employee/attendance" className={navLinkStyle}>
+          <NavLink to="/employee/attendance" className={navLinkStyle} end>
             <CalendarClock className="w-4 h-4" />
             View Attendance
           </NavLink>
@@ -87,7 +87,7 @@ const SideBar = () => {
       </div>
 
       {/* Profile & Logout card */}
-      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+      <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
         <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-150 shadow-sm mb-2">
           <div className="w-9 h-9 rounded-xl bg-slate-900 text-white font-extrabold text-xs flex items-center justify-center uppercase shadow-inner">
             {(user.name || "E").substring(0, 2)}

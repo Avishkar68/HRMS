@@ -321,7 +321,7 @@ const Attendance = () => {
           </div>
 
           {/* Calendar Card */}
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden p-6 max-w-xl">
             
             {/* Weekdays Labels */}
             <div className="grid grid-cols-7 gap-2 mb-4 text-center">
@@ -362,7 +362,7 @@ const Attendance = () => {
                         setSelectedDate(cell.dateStr);
                       }
                     }}
-                    className={`aspect-square flex flex-col items-center justify-center relative rounded-xl transition-all duration-200 select-none cursor-pointer ${
+                    className={`h-14 flex flex-col items-center justify-center relative rounded-xl transition-all duration-200 select-none cursor-pointer ${
                       cell.isCurrentMonth ? "hover:scale-[1.03] active:scale-[0.97]" : ""
                     } ${
                       isSelected 
@@ -388,7 +388,7 @@ const Attendance = () => {
           </div>
           
           {/* Legend */}
-          <div className="bg-white px-6 py-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-center gap-6 text-sm">
+          <div className="bg-white px-6 py-4 rounded-2xl border border-gray-200 shadow-sm flex flex-wrap items-center justify-center gap-6 text-sm max-w-xl">
             <div className="flex items-center gap-2">
               <span className="w-4 h-4 rounded-full bg-emerald-50 border-2 border-emerald-500" />
               <span className="font-medium text-gray-600">Present</span>

@@ -1,13 +1,13 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  Users, 
-  UserCheck, 
-  Coins, 
-  Building2, 
-  CalendarClock, 
-  BarChart3, 
-  Sliders, 
+import {
+  LayoutDashboard,
+  Users,
+  UserCheck,
+  Coins,
+  Building2,
+  CalendarClock,
+  BarChart3,
+  Sliders,
   LogOut,
   FolderOpen,
   Briefcase,
@@ -28,17 +28,16 @@ const SideBar = () => {
   };
 
   const navLinkStyle = ({ isActive }) => {
-    return `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all border ${
-      isActive 
-        ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/10 active:scale-[0.98]" 
+    return `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all border ${isActive
+        ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-600/10 active:scale-[0.98]"
         : "text-gray-500 hover:text-gray-950 hover:bg-gray-50 border-transparent"
-    }`;
+      }`;
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-white border-r border-gray-200 flex flex-col justify-between flex-shrink-0">
+    <aside className="w-64 h-screen sticky top-0 bg-white border-r border-gray-200 flex flex-col justify-between flex-shrink-0">
       {/* Upper Brand & Links */}
-      <div className="flex flex-col">
+      <div className="flex flex-col flex-1 min-h-0">
         {/* Brand header */}
         <div className="p-6 border-b border-gray-100 flex items-center gap-2 bg-gradient-to-br from-slate-50 to-white">
           <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-600/20">
@@ -51,7 +50,7 @@ const SideBar = () => {
         </div>
 
         {/* Navigation links */}
-        <nav className="flex flex-col gap-1.5 p-4 pt-6 max-h-[70vh] overflow-y-auto">
+        <nav className="flex flex-col gap-1.5 p-4 pt-6 flex-1 overflow-y-auto min-h-0">
           <NavLink to="/admin/dashboard" className={navLinkStyle}>
             <LayoutDashboard className="w-4 h-4" />
             Dashboard
@@ -104,7 +103,7 @@ const SideBar = () => {
       </div>
 
       {/* Profile & Logout card */}
-      <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+      <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
         <div className="flex items-center gap-3 bg-white p-3 rounded-2xl border border-gray-150 shadow-sm mb-2">
           <div className="w-9 h-9 rounded-xl bg-indigo-950 text-indigo-200 font-extrabold text-xs flex items-center justify-center uppercase shadow-inner">
             {(user.name || "A").substring(0, 2)}
@@ -115,7 +114,7 @@ const SideBar = () => {
           </div>
         </div>
 
-        <button 
+        <button
           onClick={handleLogout}
           className="w-full flex items-center justify-center gap-2 bg-rose-50 hover:bg-rose-100/70 border border-rose-100 text-rose-700 py-2.5 rounded-2xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
         >
