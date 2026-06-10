@@ -12,7 +12,10 @@ import {
   KeyRound, 
   Activity,
   Briefcase,
-  CalendarDays
+  CalendarDays,
+  Contact,
+  Printer,
+  AlertCircle
 } from "lucide-react";
 
 const Profile = () => {
@@ -182,6 +185,21 @@ const Profile = () => {
           <Lock className="w-4 h-4" />
           Account Security
         </button>
+        <button
+          onClick={() => {
+            setActiveTab("badge");
+            setPasswordError("");
+            setPasswordSuccess("");
+          }}
+          className={`pb-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === "badge"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <Contact className="w-4 h-4" />
+          Digital ID Badge
+        </button>
       </div>
 
       {/* Tab Content */}
@@ -347,6 +365,114 @@ const Profile = () => {
                 </button>
               </form>
 
+            </div>
+          )}
+
+          {activeTab === "badge" && (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 flex flex-col items-center space-y-6">
+              <div className="flex items-center justify-between w-full border-b border-gray-100 pb-3">
+                <div>
+                  <h3 className="font-extrabold text-gray-800 text-base">Digital ID Badge</h3>
+                  <p className="text-xs text-gray-400">Your digital corporate identity access card</p>
+                </div>
+                <button 
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98] shadow-md shadow-indigo-500/10 cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Print Badge
+                </button>
+              </div>
+
+              <div id="employee-id-badge" className="w-72 h-[420px] bg-slate-950 text-white rounded-3xl p-5 shadow-2xl relative border-4 border-indigo-500 overflow-hidden flex flex-col justify-between items-center bg-gradient-to-b from-indigo-950 via-slate-900 to-slate-950 print:border-indigo-650">
+                {/* Decorative Holographic Chip */}
+                <div className="absolute top-24 right-6 w-10 h-8 bg-amber-400/20 border border-amber-400/40 rounded-lg flex flex-col justify-between p-1 opacity-60">
+                  <div className="w-full h-[1px] bg-amber-400/40" />
+                  <div className="w-full h-[1px] bg-amber-400/40" />
+                  <div className="w-full h-[1px] bg-amber-400/40" />
+                </div>
+
+                {/* Corporate Header */}
+                <div className="flex flex-col items-center space-y-1 w-full text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Briefcase className="w-4 h-4 text-indigo-400" />
+                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-200">HRMS CORPORATE</span>
+                  </div>
+                  <div className="w-12 h-[2px] bg-indigo-500 rounded-full mx-auto" />
+                </div>
+
+                {/* Avatar Section */}
+                <div className="flex flex-col items-center space-y-3 mt-2">
+                  <div className="w-20 h-20 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-2xl font-black shadow-lg shadow-indigo-655/30 border-2 border-indigo-400 relative select-none">
+                    {getInitials(profile.name)}
+                    <div className="absolute -bottom-1.5 px-2 py-0.5 bg-emerald-500 text-white font-extrabold text-[8px] uppercase tracking-wider rounded-full border border-slate-950 shadow">
+                      ACTIVE
+                    </div>
+                  </div>
+
+                  <div className="text-center space-y-0.5">
+                    <h4 className="font-extrabold text-sm text-slate-100 tracking-tight leading-none mt-1">{profile.name}</h4>
+                    <p className="text-[9px] text-indigo-300 font-bold uppercase tracking-wider">{profile.role}</p>
+                  </div>
+                </div>
+
+                {/* Corporate Metadata Block */}
+                <div className="w-full bg-slate-900/50 border border-slate-800/80 rounded-2xl p-3 text-center space-y-1.5">
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-gray-400 font-bold uppercase">ID Number</span>
+                    <span className="font-mono text-gray-200 font-semibold">{profile._id.substring(0, 10).toUpperCase()}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-gray-400 font-bold uppercase">Department</span>
+                    <span className="text-gray-200 font-semibold">General Operations</span>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px]">
+                    <span className="text-gray-400 font-bold uppercase">Issued Date</span>
+                    <span className="text-indigo-200 font-semibold">
+                      {profile.createdAt ? new Date(profile.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "N/A"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Barcode */}
+                <div className="w-full flex flex-col items-center mt-1 space-y-1">
+                  <div className="h-6 w-44 bg-white p-1 rounded-sm flex items-center justify-around opacity-90">
+                    <div className="w-[2px] h-4 bg-black" />
+                    <div className="w-[1px] h-4 bg-black" />
+                    <div className="w-[3px] h-4 bg-black" />
+                    <div className="w-[1px] h-4 bg-black" />
+                    <div className="w-[2px] h-4 bg-black" />
+                    <div className="w-[1px] h-4 bg-black" />
+                    <div className="w-[3px] h-4 bg-black" />
+                    <div className="w-[2px] h-4 bg-black" />
+                    <div className="w-[1px] h-4 bg-black" />
+                    <div className="w-[2px] h-4 bg-black" />
+                    <div className="w-[4px] h-4 bg-black" />
+                    <div className="w-[1px] h-4 bg-black" />
+                  </div>
+                  <span className="text-[7px] text-gray-500 font-black tracking-widest font-mono uppercase">Secure Corporate ID Access</span>
+                </div>
+              </div>
+              
+              {/* Local style tag to isolate print functionality */}
+              <style dangerouslySetInnerHTML={{__html: `
+                @media print {
+                  body * {
+                    visibility: hidden !important;
+                  }
+                  #employee-id-badge, #employee-id-badge * {
+                    visibility: visible !important;
+                  }
+                  #employee-id-badge {
+                    position: absolute !important;
+                    left: 50% !important;
+                    top: 50% !important;
+                    transform: translate(-50%, -50%) scale(1.5) !important;
+                    border-color: #4f46e5 !important;
+                    box-shadow: none !important;
+                  }
+                }
+              `}} />
             </div>
           )}
 

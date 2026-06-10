@@ -4,7 +4,12 @@ import {
   UserCheck, 
   CalendarDays,
   LogOut,
-  ShieldAlert
+  ShieldAlert,
+  CheckSquare,
+  Users,
+  CalendarRange,
+  Award,
+  BookOpen
 } from "lucide-react";
 
 const SideBar = () => {
@@ -50,9 +55,29 @@ const SideBar = () => {
             <UserCheck className="w-4 h-4" />
             Team Roster
           </NavLink>
+          <NavLink to="/manager/team" className={navLinkStyle}>
+            <Users className="w-4 h-4" />
+            My Team
+          </NavLink>
           <NavLink to="/manager/approve-leaves" className={navLinkStyle}>
             <CalendarDays className="w-4 h-4" />
             Approve Leaves
+          </NavLink>
+          <NavLink to="/manager/tasks" className={navLinkStyle}>
+            <CheckSquare className="w-4 h-4" />
+            Tasks
+          </NavLink>
+          <NavLink to="/manager/timesheets" className={navLinkStyle}>
+            <CalendarRange className="w-4 h-4" />
+            Timesheets
+          </NavLink>
+          <NavLink to="/manager/appraisals" className={navLinkStyle}>
+            <Award className="w-4 h-4" />
+            Appraisals
+          </NavLink>
+          <NavLink to="/manager/service-book" className={navLinkStyle}>
+            <BookOpen className="w-4 h-4" />
+            Service Books
           </NavLink>
         </nav>
       </div>

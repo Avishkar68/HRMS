@@ -10,7 +10,11 @@ import {
   Sliders, 
   LogOut,
   FolderOpen,
-  Briefcase
+  Briefcase,
+  CheckSquare,
+  CalendarRange,
+  Award,
+  BookOpen
 } from "lucide-react";
 
 const SideBar = () => {
@@ -71,6 +75,22 @@ const SideBar = () => {
           <NavLink to="/admin/leave-requests" className={navLinkStyle}>
             <CalendarClock className="w-4 h-4" />
             Leave Requests
+          </NavLink>
+          <NavLink to="/admin/tasks" className={navLinkStyle}>
+            <CheckSquare className="w-4 h-4" />
+            Tasks
+          </NavLink>
+          <NavLink to="/admin/timesheets" className={navLinkStyle}>
+            <CalendarRange className="w-4 h-4" />
+            Timesheets
+          </NavLink>
+          <NavLink to="/admin/appraisals" className={navLinkStyle}>
+            <Award className="w-4 h-4" />
+            Appraisals
+          </NavLink>
+          <NavLink to="/admin/service-book" className={navLinkStyle}>
+            <BookOpen className="w-4 h-4" />
+            Service Book
           </NavLink>
           <NavLink to="/admin/reports" className={navLinkStyle}>
             <BarChart3 className="w-4 h-4" />

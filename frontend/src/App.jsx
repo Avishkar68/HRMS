@@ -20,6 +20,7 @@ import ManagerPage from "./pages/manager/ManagePage/ManagerPage";
 import ApproveLeaves from "./pages/manager/ApproveLeaves/ApproveLeaves";
 import TeamAttendance from "./pages/manager/TeamAttendance/TeamAttendance";
 import TeamDashboard from "./pages/manager/TeamDashboard/TeamDashboard";
+import ManagerTeam from "./pages/manager/Team/ManagerTeam";
 
 /* ===== ADMIN ===== */
 import AdminPage from "./pages/admin/AdminPage/AdminPage";
@@ -32,6 +33,26 @@ import Documents from "./pages/admin/Documents/Documents";
 import LeaveRequests from "./pages/admin/LeaveRequests/LeaveRequests";
 import Reports from "./pages/admin/Reports/Reports";
 import Settings from "./pages/admin/Settings/Settings";
+
+/* ===== TASKS ===== */
+import EmployeeTasks from "./pages/employee/Tasks/EmployeeTasks";
+import ManagerTasks from "./pages/manager/Tasks/ManagerTasks";
+import AdminTasks from "./pages/admin/Tasks/AdminTasks";
+
+/* ===== TIMESHEETS ===== */
+import EmployeeTimesheets from "./pages/employee/Timesheets/EmployeeTimesheets";
+import ManagerTimesheets from "./pages/manager/Timesheets/ManagerTimesheets";
+import AdminTimesheets from "./pages/admin/Timesheets/AdminTimesheets";
+
+/* ===== APPRAISALS ===== */
+import EmployeeAppraisals from "./pages/employee/Appraisals/EmployeeAppraisals";
+import ManagerAppraisals from "./pages/manager/Appraisals/ManagerAppraisals";
+import AdminAppraisals from "./pages/admin/Appraisals/AdminAppraisals";
+
+/* ===== SERVICE BOOK ===== */
+import EmployeeServiceBook from "./pages/employee/ServiceBook/EmployeeServiceBook";
+import ManagerServiceBook from "./pages/manager/ServiceBook/ManagerServiceBook";
+import AdminServiceBook from "./pages/admin/ServiceBook/AdminServiceBook";
 
 /* ===== SUPER ADMIN ===== */
 import SuperAdminPage from "./pages/superadmin/SuperAdminPage/SuperAdminPage";
@@ -69,6 +90,10 @@ function App() {
           <Route path="attendance/mark" element={<MarkAttendance />} />
           <Route path="apply-leave" element={<ApplyLeave />} />
           <Route path="payslips" element={<PaySlips />} />
+          <Route path="tasks" element={<EmployeeTasks />} />
+          <Route path="timesheets" element={<EmployeeTimesheets />} />
+          <Route path="appraisals" element={<EmployeeAppraisals />} />
+          <Route path="service-book" element={<EmployeeServiceBook />} />
         </Route>
 
         {/* ================= MANAGER ================= */}
@@ -84,6 +109,11 @@ function App() {
           <Route path="dashboard" element={<TeamDashboard />} />
           <Route path="team-attendance" element={<TeamAttendance />} />
           <Route path="approve-leaves" element={<ApproveLeaves />} />
+          <Route path="tasks" element={<ManagerTasks />} />
+          <Route path="team" element={<ManagerTeam />} />
+          <Route path="timesheets" element={<ManagerTimesheets />} />
+          <Route path="appraisals" element={<ManagerAppraisals />} />
+          <Route path="service-book" element={<ManagerServiceBook />} />
         </Route>
 
         {/* ================= ADMIN ================= */}
@@ -105,6 +135,10 @@ function App() {
           <Route path="leave-requests" element={<LeaveRequests />} />
           <Route path="reports" element={<Reports />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="tasks" element={<AdminTasks />} />
+          <Route path="timesheets" element={<AdminTimesheets />} />
+          <Route path="appraisals" element={<AdminAppraisals />} />
+          <Route path="service-book" element={<AdminServiceBook />} />
         </Route>
 
         {/* ================= SUPER ADMIN ================= */}

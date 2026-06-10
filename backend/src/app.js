@@ -16,6 +16,11 @@ import departmentRoutes from "./routes/department.routes.js";
 import payrollRoutes from "./routes/payroll.routes.js";
 import documentRoutes from "./routes/document.routes.js";
 import adminReportsRoutes from "./routes/adminReports.routes.js";
+import taskRoutes from "./routes/task.routes.js";
+import managerTeamRoutes from "./routes/managerTeam.routes.js";
+import timesheetRoutes from "./routes/timesheet.routes.js";
+import appraisalRoutes from "./routes/appraisal.routes.js";
+import serviceBookRoutes from "./routes/serviceBook.routes.js";
 
 const app = express();
 
@@ -43,5 +48,10 @@ app.use("/api/admin/departments", departmentRoutes);
 app.use("/api/admin/documents", documentRoutes);
 app.use("/api/admin/reports", adminReportsRoutes);
 app.use("/api/payroll", payrollRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api/manager/team", managerTeamRoutes);
+app.use("/api/timesheets", timesheetRoutes);
+app.use("/api/appraisals", appraisalRoutes);
+app.use("/api/service-book", serviceBookRoutes);
 
 export default app;
