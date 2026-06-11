@@ -347,7 +347,9 @@ const Employees = () => {
                       </div>
                       <div>
                         <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Department</span>
-                        <span className="text-sm font-semibold text-gray-850">General Operations</span>
+                        <span className="text-sm font-semibold text-gray-850">
+                          {selectedUser.departmentId?.name || "General Operations"}
+                        </span>
                       </div>
                       <div>
                         <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Account Status</span>
@@ -446,7 +448,9 @@ const Employees = () => {
                       </div>
                       <div className="flex justify-between items-center text-[10px]">
                         <span className="text-gray-400 font-bold uppercase">Department</span>
-                        <span className="text-gray-200 font-semibold">General Operations</span>
+                        <span className="text-gray-200 font-semibold">
+                          {selectedUser.departmentId?.name || "General Operations"}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center text-[10px]">
                         <span className="text-gray-400 font-bold uppercase">Issued Date</span>

@@ -23,7 +23,7 @@ const Departments = () => {
   const [form, setForm] = useState({
     name: "",
     code: "",
-    departmentHead: "",
+    headId: "",
   });
 
   const fetchData = async () => {
@@ -57,7 +57,7 @@ const Departments = () => {
     }
     try {
       if (editMode) {
-        await api.put(`/admin/departments/${editingId}`, form);
+        await api.patch(`/admin/departments/${editingId}`, form);
         alert("Department updated");
       } else {
         await api.post("/admin/departments", form);
@@ -76,7 +76,7 @@ const Departments = () => {
     setForm({
       name: dept.name,
       code: dept.code || "",
-      departmentHead: dept.departmentHead?._id || dept.departmentHead || "",
+      headId: dept.headId?._id || dept.headId || "",
     });
     setOpen(true);
   };
@@ -93,7 +93,7 @@ const Departments = () => {
   };
 
   const resetModal = () => {
-    setForm({ name: "", code: "", departmentHead: "" });
+    setForm({ name: "", code: "", headId: "" });
     setEditMode(false);
     setEditingId(null);
     setOpen(false);
@@ -110,7 +110,7 @@ const Departments = () => {
   };
 
   const totalDepts = departments.length;
-  const staffedDepts = departments.filter((d) => d.departmentHead).length;
+  const staffedDepts = departments.filter((d) => d.headId).length;
   const vacantDepts = totalDepts - staffedDepts;
 
   if (loading) {
@@ -167,7 +167,7 @@ const Departments = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {departments.map((dept) => {
-            const headName = dept.departmentHead?.name || "Unassigned Head";
+            const headName = dept.headId?.name || "Unassigned Head";
             return (
               <div 
                 key={dept._id}
@@ -179,7 +179,7 @@ const Departments = () => {
                       <span className="px-2.5 py-1 bg-indigo-50 border border-indigo-150 text-indigo-700 rounded-xl text-[10px] font-black tracking-widest font-mono uppercase">
                         {dept.code || "N/A"}
                       </span>
-                      <h3 className="text-base font-extrabold text-gray-950 pt-1.5">{dept.name}</h3>
+                      <h3 className="text-base font-extrabold text-gray-955 pt-1.5">{dept.name}</h3>
                     </div>
                     
                     <div className="w-10 h-10 rounded-xl bg-gray-50 border border-gray-150 flex items-center justify-center text-gray-500">
@@ -189,13 +189,13 @@ const Departments = () => {
 
                   <div className="p-3 bg-gray-50 rounded-2xl border border-gray-150 flex items-center gap-3">
                     <div className={`w-8 h-8 rounded-xl font-extrabold text-xs flex items-center justify-center uppercase shadow-inner ${
-                      dept.departmentHead ? "bg-indigo-950 text-indigo-200" : "bg-gray-200 text-gray-400"
+                      dept.headId ? "bg-indigo-950 text-indigo-200" : "bg-gray-200 text-gray-400"
                     }`}>
                       {getInitials(headName)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-gray-900 truncate leading-tight">{headName}</p>
-                      <p className="text-[10px] text-gray-400 truncate mt-0.5">{dept.departmentHead ? "Department Head" : "Vacant Position"}</p>
+                      <p className="text-[10px] text-gray-400 truncate mt-0.5">{dept.headId ? "Department Head" : "Vacant Position"}</p>
                     </div>
                   </div>
                 </div>
@@ -232,7 +232,7 @@ const Departments = () => {
             
             <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-extrabold text-gray-950">{editMode ? "Modify Department" : "Add Department"}</h2>
+                <h2 className="text-lg font-extrabold text-gray-955">{editMode ? "Modify Department" : "Add Department"}</h2>
                 <p className="text-gray-500 text-xs mt-0.5">Manage organizational units and direct team leaders</p>
               </div>
               <button 
@@ -252,7 +252,7 @@ const Departments = () => {
                     name="name" 
                     value={form.name} 
                     onChange={handleChange} 
-                    className="w-full border border-gray-250 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white" 
+                    className="w-full border border-gray-250 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-medium" 
                     placeholder="e.g. Technology & Engineering" 
                     required 
                   />
@@ -267,7 +267,7 @@ const Departments = () => {
                     name="code" 
                     value={form.code} 
                     onChange={handleChange} 
-                    className="w-full border border-gray-250 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white uppercase" 
+                    className="w-full border border-gray-250 rounded-xl pl-10 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white uppercase font-mono font-medium" 
                     placeholder="e.g. TECH" 
                     required 
                   />
@@ -279,10 +279,10 @@ const Departments = () => {
                 <div className="relative">
                   <User className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <select 
-                    name="departmentHead" 
-                    value={form.departmentHead} 
+                    name="headId" 
+                    value={form.headId} 
                     onChange={handleChange} 
-                    className="w-full border border-gray-255 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer appearance-none"
+                    className="w-full border border-gray-255 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer appearance-none outline-none font-medium text-gray-900"
                   >
                     <option value="">Select Department Head (Optional)</option>
                     {managers.map((m) => (

@@ -101,7 +101,7 @@ const AdminServiceBook = () => {
       eventType: "Appointment",
       eventDate: new Date().toISOString().split("T")[0],
       designation: latest ? latest.designation : "",
-      department: latest ? latest.department : "General Operations",
+      department: latest ? latest.department : (currentUser?.departmentId?.name || "General Operations"),
       salaryDetails: latest ? latest.salaryDetails : "",
       officeOrderNumber: "",
       remarks: ""

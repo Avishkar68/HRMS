@@ -9,6 +9,7 @@ export const getMe = async (req, res) => {
     const user = await User.findById(req.user.id)
       .select("-passwordHash")
       .populate("managerId", "name email")
+      .populate("departmentId", "name code")
       .lean();
     if (!user) return res.status(404).json({ message: "User not found" });
     res.json(user);
@@ -132,6 +133,7 @@ export const updateProfile = async (req, res) => {
     const populated = await User.findById(user._id)
       .select("-passwordHash")
       .populate("managerId", "name email")
+      .populate("departmentId", "name code")
       .lean();
 
     res.json(populated);

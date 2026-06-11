@@ -99,7 +99,7 @@ const ManagerServiceBook = () => {
       eventType: "Promotion",
       eventDate: new Date().toISOString().split("T")[0],
       designation: latest ? latest.designation : "",
-      department: latest ? latest.department : "General Operations",
+      department: latest ? latest.department : (currentMember?.departmentId?.name || "General Operations"),
       salaryDetails: latest ? latest.salaryDetails : "",
       officeOrderNumber: "",
       remarks: ""

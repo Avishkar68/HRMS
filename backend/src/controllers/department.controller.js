@@ -30,7 +30,13 @@ export const createDepartment = async (req, res) => {
       code: code || "",
       headId: headId || null,
     });
-    res.status(201).json(department);
+
+    if (headId) {
+      await User.findByIdAndUpdate(headId, { departmentId: department._id });
+    }
+
+    const populated = await Department.findById(department._id).populate("headId", "name email").lean();
+    res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -47,11 +53,26 @@ export const updateDepartment = async (req, res) => {
     });
     if (!department) return res.status(404).json({ message: "Department not found" });
 
+    const previousHeadId = department.headId;
     if (name) department.name = name.trim();
     if (code !== undefined) department.code = code;
     if (headId !== undefined) department.headId = headId || null;
     await department.save();
-    res.json(department);
+
+    if (headId !== undefined && String(previousHeadId) !== String(headId)) {
+      if (previousHeadId) {
+        const otherDept = await Department.findOne({ headId: previousHeadId, _id: { $ne: department._id } });
+        if (!otherDept) {
+          await User.findByIdAndUpdate(previousHeadId, { departmentId: null });
+        }
+      }
+      if (headId) {
+        await User.findByIdAndUpdate(headId, { departmentId: department._id });
+      }
+    }
+    
+    const populated = await Department.findById(department._id).populate("headId", "name email").lean();
+    res.json(populated);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -65,6 +86,10 @@ export const deleteDepartment = async (req, res) => {
       companyId: req.user.companyId,
     });
     if (!department) return res.status(404).json({ message: "Department not found" });
+
+    // Clean up department reference on all users
+    await User.updateMany({ departmentId: id }, { $set: { departmentId: null } });
+
     res.json({ message: "Department deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });

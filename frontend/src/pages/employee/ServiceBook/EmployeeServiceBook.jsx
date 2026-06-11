@@ -22,6 +22,7 @@ const EmployeeServiceBook = () => {
   const [loading, setLoading] = useState(true);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
 
   const fetchServiceBook = async () => {
     try {
@@ -32,10 +33,19 @@ const EmployeeServiceBook = () => {
     }
   };
 
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get("/auth/me");
+      setUserProfile(res.data);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+    }
+  };
+
   useEffect(() => {
     const initData = async () => {
       setLoading(true);
-      await fetchServiceBook();
+      await Promise.all([fetchServiceBook(), fetchProfile()]);
       setLoading(false);
     };
     initData();
@@ -77,7 +87,7 @@ const EmployeeServiceBook = () => {
   // Get current status summary
   const totalRecords = entries.length;
   const currentDesignation = entries[0]?.designation || "Initial Appointee";
-  const currentDepartment = entries[0]?.department || "General Operations";
+  const currentDepartment = entries[0]?.department || userProfile?.departmentId?.name || "General Operations";
   const dateOfJoining = entries[entries.length - 1]?.eventDate 
     ? new Date(entries[entries.length - 1].eventDate).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })
     : "—";

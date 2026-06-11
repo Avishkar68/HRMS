@@ -7,6 +7,7 @@ export const getTeamMembers = async (req, res) => {
 
     const team = await User.find({ companyId, managerId, status: "active" })
       .select("-passwordHash")
+      .populate("departmentId", "name code")
       .sort({ name: 1 })
       .lean();
 

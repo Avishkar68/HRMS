@@ -351,7 +351,9 @@ const Profile = () => {
 
                   <div className="space-y-1">
                     <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Corporate Department</p>
-                    <p className="text-sm font-semibold text-gray-900">General Operations</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {profile.departmentId?.name || "General Operations"}
+                    </p>
                   </div>
 
                   <div className="space-y-1">
@@ -631,7 +633,9 @@ const Profile = () => {
                   </div>
                   <div className="flex justify-between items-center text-[10px]">
                     <span className="text-gray-400 font-bold uppercase">Department</span>
-                    <span className="text-gray-200 font-semibold">General Operations</span>
+                    <span className="text-gray-200 font-semibold">
+                      {profile.departmentId?.name || "General Operations"}
+                    </span>
                   </div>
                   <div className="flex justify-between items-center text-[10px]">
                     <span className="text-gray-400 font-bold uppercase">Issued Date</span>
