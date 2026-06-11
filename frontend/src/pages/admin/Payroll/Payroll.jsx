@@ -78,7 +78,16 @@ const Payroll = () => {
   }, []);
 
   const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    let newForm = { ...form, [e.target.name]: e.target.value };
+    if (e.target.name === "userId") {
+      const selectedUserObj = users.find((u) => u._id === e.target.value);
+      if (selectedUserObj) {
+        newForm.monthlyBaseSalary = String(selectedUserObj.packageSalary || "");
+      } else {
+        newForm.monthlyBaseSalary = "";
+      }
+    }
+    setForm(newForm);
     if (e.target.name === "userId" || e.target.name === "month" || e.target.name === "monthlyBaseSalary") {
       setCalculation(null);
     }

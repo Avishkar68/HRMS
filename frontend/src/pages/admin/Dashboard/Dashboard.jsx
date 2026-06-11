@@ -30,6 +30,7 @@ const Dashboard = () => {
     password: "",
     role: "employee",
     managerId: "",
+    packageSalary: "",
   });
 
   const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -65,12 +66,18 @@ const Dashboard = () => {
 
   const handleCreate = async () => {
     try {
-      const payload = { name: form.name, email: form.email, password: form.password, role: form.role };
+      const payload = { 
+        name: form.name, 
+        email: form.email, 
+        password: form.password, 
+        role: form.role,
+        packageSalary: Number(form.packageSalary) || 0
+      };
       if (form.role === "employee") payload.managerId = form.managerId;
       await api.post("/admin/users", payload);
       alert("User created successfully");
       setOpen(false);
-      setForm({ name: "", email: "", password: "", role: "employee", managerId: "" });
+      setForm({ name: "", email: "", password: "", role: "employee", managerId: "", packageSalary: "" });
       const res = await api.get("/admin/dashboard/stats");
       setStats(res.data);
     } catch (err) {
@@ -294,6 +301,22 @@ const Dashboard = () => {
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Package Salary (Base Monthly Amount in ₹)</label>
+                <div className="relative">
+                  <span className="font-extrabold text-gray-400 absolute left-4 top-1/2 -translate-y-1/2 text-sm select-none">₹</span>
+                  <input
+                    name="packageSalary"
+                    type="number"
+                    value={form.packageSalary}
+                    onChange={handleChange}
+                    className="w-full border border-gray-250 rounded-xl pl-8 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-mono"
+                    placeholder="e.g. 50000"
+                    min="0"
+                  />
+                </div>
               </div>
             </div>
 

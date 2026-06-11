@@ -23,6 +23,9 @@ const Employees = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [activeModalTab, setActiveModalTab] = useState("details");
 
+  const [editingSalary, setEditingSalary] = useState("");
+  const [updatingSalary, setUpdatingSalary] = useState(false);
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -36,6 +39,33 @@ const Employees = () => {
     };
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      setEditingSalary(String(selectedUser.packageSalary || 0));
+    } else {
+      setEditingSalary("");
+    }
+  }, [selectedUser]);
+
+  const handleUpdateSalary = async () => {
+    if (!selectedUser) return;
+    setUpdatingSalary(true);
+    try {
+      const res = await api.put(`/admin/users/${selectedUser._id}`, {
+        packageSalary: Number(editingSalary) || 0
+      });
+      alert("Salary package updated successfully.");
+      
+      const updatedUser = res.data.user || { ...selectedUser, packageSalary: Number(editingSalary) || 0 };
+      setUsers((prev) => prev.map((u) => u._id === selectedUser._id ? { ...u, ...updatedUser } : u));
+      setSelectedUser((prev) => ({ ...prev, ...updatedUser }));
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update package salary.");
+    } finally {
+      setUpdatingSalary(false);
+    }
+  };
 
   const getInitials = (name) => {
     if (!name) return "??";
@@ -325,6 +355,41 @@ const Employees = () => {
                           <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                           {selectedUser.status || "active"}
                         </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Compensation & Package Group */}
+                  <div className="space-y-4 pt-4 border-t border-gray-100">
+                    <h4 className="text-gray-800 font-extrabold text-xs uppercase tracking-wider pb-1 flex items-center gap-1.5">
+                      <Briefcase className="w-4 h-4 text-gray-450" />
+                      Compensation & Salary Package
+                    </h4>
+                    
+                    <div className="p-4 bg-slate-50 border border-gray-150 rounded-2xl flex flex-col gap-3">
+                      <div>
+                        <label className="block text-[10px] text-gray-455 font-bold uppercase tracking-wider mb-1">Package Salary (Base Monthly, ₹)</label>
+                        <div className="flex gap-2 items-center">
+                          <div className="relative flex-1">
+                            <span className="font-extrabold text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2 text-xs select-none">₹</span>
+                            <input
+                              type="number"
+                              value={editingSalary}
+                              onChange={(e) => setEditingSalary(e.target.value)}
+                              className="w-full border border-gray-250 bg-white rounded-xl pl-7 pr-3 py-2 text-xs font-mono focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium text-gray-900"
+                              placeholder="e.g. 50000"
+                              min="0"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleUpdateSalary}
+                            disabled={updatingSalary}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-wait shrink-0 shadow-sm"
+                          >
+                            {updatingSalary ? "Saving…" : "Update Package"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

@@ -40,6 +40,11 @@ const userSchema = new mongoose.Schema(
       default: "active"
     },
 
+    packageSalary: {
+      type: Number,
+      default: 0
+    },
+
     bankDetails: {
       bankName: { type: String, default: "" },
       accountNumber: { type: String, default: "" },

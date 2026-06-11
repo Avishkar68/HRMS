@@ -48,7 +48,7 @@ export const getUsers = async (req, res) => {
 
 export const createUser = async (req, res) => {
   try {
-    const { name, email, password, role, managerId } = req.body;
+    const { name, email, password, role, managerId, packageSalary } = req.body;
 
     // ❌ Prevent admin creation
     if (role === "admin") {
@@ -93,6 +93,7 @@ export const createUser = async (req, res) => {
       passwordHash,
       role,
       managerId: role === "employee" ? managerId : null,
+      packageSalary: Number(packageSalary) || 0,
       status: "active"
     });
 
@@ -126,6 +127,32 @@ export const createUser = async (req, res) => {
       userId: user._id
     });
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+export const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, email, role, managerId, packageSalary, status } = req.body;
+
+    const user = await User.findOne({ _id: id, companyId: req.user.companyId });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (status) user.status = status;
+    if (packageSalary !== undefined) user.packageSalary = Number(packageSalary) || 0;
+    if (role && role !== "admin") user.role = role;
+    if (managerId !== undefined) {
+      user.managerId = role === "employee" ? managerId : null;
+    }
+
+    await user.save();
+    res.json({ message: "User updated successfully", user });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
