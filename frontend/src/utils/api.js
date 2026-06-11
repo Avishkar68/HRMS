@@ -19,11 +19,22 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   (err) => {
-    if (err.response?.status === 401) {
+    const status = err.response?.status;
+    const isSuperAdmin = (() => {
+      try {
+        const userObj = JSON.parse(localStorage.getItem("user"));
+        return userObj?.role === "superadmin";
+      } catch (e) {
+        return false;
+      }
+    })();
+
+    if (status === 401 || (status === 403 && !isSuperAdmin)) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
       if (typeof window !== "undefined") {
-        window.location.href = "/signin";
+        const message = err.response?.data?.message || "Session expired or access denied";
+        window.location.href = `/signin?error=${encodeURIComponent(message)}`;
       }
     }
     return Promise.reject(err);

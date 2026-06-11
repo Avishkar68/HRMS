@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.model.js";
 import SuperAdmin from "../models/SuperAdmin.model.js";
+import Company from "../models/Company.model.js";
 import { generateToken } from "../utils/jwt.js";
 
 /* ================= GET CURRENT USER (EMPLOYEE/MANAGER/ADMIN) ================= */
@@ -29,6 +30,17 @@ export const login = async (req, res) => {
 
     if (user.status !== "active")
       return res.status(403).json({ message: "Account inactive" });
+
+    // Enforce Company Subscription Access Gating
+    const company = await Company.findById(user.companyId);
+    if (!company)
+      return res.status(403).json({ message: "Company not found" });
+
+    if (company.status !== "active")
+      return res.status(403).json({ message: "Company account is suspended/inactive" });
+
+    if (company.plan !== "premium")
+      return res.status(403).json({ message: "Premium subscription required to access the system" });
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
     if (!isMatch)

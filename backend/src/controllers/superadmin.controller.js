@@ -50,13 +50,17 @@ export const createCompany = async (req, res) => {
       domain,
       adminName,
       adminEmail,
-      adminPassword
+      adminPassword,
+      plan,
+      status
     } = req.body;
 
     // 1. Create Company
     const company = await Company.create({
       name: companyName,
-      domain
+      domain,
+      plan: plan || "basic",
+      status: status || "active"
     });
 
     // 2. Create Company Admin
@@ -77,6 +81,39 @@ export const createCompany = async (req, res) => {
       adminUserId: adminUser._id
     });
 
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+/* ================= UPDATE COMPANY ================= */
+export const updateCompany = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, domain, plan, status } = req.body;
+
+    const company = await Company.findById(id);
+    if (!company) {
+      return res.status(404).json({ message: "Company not found" });
+    }
+
+    if (name !== undefined) company.name = name;
+    if (domain !== undefined) company.domain = domain;
+    if (plan !== undefined) {
+      if (!["basic", "premium"].includes(plan)) {
+        return res.status(400).json({ message: "Invalid plan type" });
+      }
+      company.plan = plan;
+    }
+    if (status !== undefined) {
+      if (!["active", "inactive"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status type" });
+      }
+      company.status = status;
+    }
+
+    await company.save();
+    res.json({ message: "Company updated successfully", company });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
