@@ -54,6 +54,10 @@ import EmployeeServiceBook from "./pages/employee/ServiceBook/EmployeeServiceBoo
 import ManagerServiceBook from "./pages/manager/ServiceBook/ManagerServiceBook";
 import AdminServiceBook from "./pages/admin/ServiceBook/AdminServiceBook";
 
+/* ===== RECRUITMENT ===== */
+import Recruitment from "./pages/admin/Recruitment/Recruitment";
+import ManagerRecruitment from "./pages/manager/Recruitment/ManagerRecruitment";
+
 /* ===== SUPER ADMIN ===== */
 import SuperAdminPage from "./pages/superadmin/SuperAdminPage/SuperAdminPage";
 import Companies from "./pages/superadmin/Companies/Companies";
@@ -114,6 +118,7 @@ function App() {
           <Route path="timesheets" element={<ManagerTimesheets />} />
           <Route path="appraisals" element={<ManagerAppraisals />} />
           <Route path="service-book" element={<ManagerServiceBook />} />
+          <Route path="recruitment" element={<ManagerRecruitment />} />
         </Route>
 
         {/* ================= ADMIN ================= */}
@@ -139,6 +144,7 @@ function App() {
           <Route path="timesheets" element={<AdminTimesheets />} />
           <Route path="appraisals" element={<AdminAppraisals />} />
           <Route path="service-book" element={<AdminServiceBook />} />
+          <Route path="recruitment" element={<Recruitment />} />
         </Route>
 
         {/* ================= SUPER ADMIN ================= */}

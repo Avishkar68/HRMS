@@ -10,7 +10,8 @@ import {
   CalendarRange,
   Award,
   BookOpen,
-  X
+  X,
+  Briefcase
 } from "lucide-react";
 
 const SideBar = ({ isOpen, onClose }) => {
@@ -85,6 +86,10 @@ const SideBar = ({ isOpen, onClose }) => {
             <NavLink to="/manager/team" className={navLinkStyle} onClick={handleLinkClick}>
               <Users className="w-4 h-4" />
               My Team
+            </NavLink>
+            <NavLink to="/manager/recruitment" className={navLinkStyle} onClick={handleLinkClick}>
+              <Briefcase className="w-4 h-4" />
+              Recruitment
             </NavLink>
             <NavLink to="/manager/approve-leaves" className={navLinkStyle} onClick={handleLinkClick}>
               <CalendarDays className="w-4 h-4" />

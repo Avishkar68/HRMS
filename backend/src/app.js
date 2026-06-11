@@ -21,6 +21,7 @@ import managerTeamRoutes from "./routes/managerTeam.routes.js";
 import timesheetRoutes from "./routes/timesheet.routes.js";
 import appraisalRoutes from "./routes/appraisal.routes.js";
 import serviceBookRoutes from "./routes/serviceBook.routes.js";
+import recruitmentRoutes from "./routes/recruitment.routes.js";
 
 const app = express();
 
@@ -53,5 +54,6 @@ app.use("/api/manager/team", managerTeamRoutes);
 app.use("/api/timesheets", timesheetRoutes);
 app.use("/api/appraisals", appraisalRoutes);
 app.use("/api/service-book", serviceBookRoutes);
+app.use("/api/recruitment", recruitmentRoutes);
 
 export default app;

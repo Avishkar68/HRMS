@@ -98,6 +98,10 @@ const SideBar = ({ isOpen, onClose }) => {
               <Building2 className="w-4 h-4" />
               Departments
             </NavLink>
+            <NavLink to="/admin/recruitment" className={navLinkStyle} onClick={handleLinkClick}>
+              <Briefcase className="w-4 h-4" />
+              Recruitment
+            </NavLink>
             <NavLink to="/admin/leave-requests" className={navLinkStyle} onClick={handleLinkClick}>
               <CalendarClock className="w-4 h-4" />
               Leave Requests
