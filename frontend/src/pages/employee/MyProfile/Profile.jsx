@@ -15,7 +15,8 @@ import {
   CalendarDays,
   Contact,
   Printer,
-  AlertCircle
+  AlertCircle,
+  Landmark
 } from "lucide-react";
 
 const Profile = () => {
@@ -34,11 +35,32 @@ const Profile = () => {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Bank Details States
+  const [bankForm, setBankForm] = useState({
+    bankName: "",
+    accountNumber: "",
+    ifscCode: "",
+    accountHolderName: "",
+    branchName: ""
+  });
+  const [bankSubmitting, setBankSubmitting] = useState(false);
+  const [bankError, setBankError] = useState("");
+  const [bankSuccess, setBankSuccess] = useState("");
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const res = await api.get("/auth/me");
         setProfile(res.data);
+        if (res.data && res.data.bankDetails) {
+          setBankForm({
+            bankName: res.data.bankDetails.bankName || "",
+            accountNumber: res.data.bankDetails.accountNumber || "",
+            ifscCode: res.data.bankDetails.ifscCode || "",
+            accountHolderName: res.data.bankDetails.accountHolderName || "",
+            branchName: res.data.bankDetails.branchName || ""
+          });
+        }
       } catch (err) {
         console.error(err);
       } finally {
@@ -88,6 +110,30 @@ const Profile = () => {
       setPasswordError(err.response?.data?.message || "Failed to update password. Verify current password.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleBankSubmit = async (e) => {
+    e.preventDefault();
+    setBankError("");
+    setBankSuccess("");
+
+    if (!bankForm.accountHolderName || !bankForm.bankName || !bankForm.accountNumber || !bankForm.ifscCode) {
+      setBankError("Required banking fields are missing");
+      return;
+    }
+
+    setBankSubmitting(true);
+    try {
+      const res = await api.put("/auth/profile", {
+        bankDetails: bankForm
+      });
+      setBankSuccess("Banking details updated successfully");
+      setProfile(res.data);
+    } catch (err) {
+      setBankError(err.response?.data?.message || "Failed to update banking details. Verify inputs.");
+    } finally {
+      setBankSubmitting(false);
     }
   };
 
@@ -169,6 +215,32 @@ const Profile = () => {
         >
           <User className="w-4 h-4" />
           Personal Overview
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("banking");
+            setPasswordError("");
+            setPasswordSuccess("");
+            setBankError("");
+            setBankSuccess("");
+            if (profile && profile.bankDetails) {
+              setBankForm({
+                bankName: profile.bankDetails.bankName || "",
+                accountNumber: profile.bankDetails.accountNumber || "",
+                ifscCode: profile.bankDetails.ifscCode || "",
+                accountHolderName: profile.bankDetails.accountHolderName || "",
+                branchName: profile.bankDetails.branchName || ""
+              });
+            }
+          }}
+          className={`pb-4 px-6 font-bold text-sm border-b-2 transition-all flex items-center gap-2 ${
+            activeTab === "banking"
+              ? "border-indigo-600 text-indigo-600"
+              : "border-transparent text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          <Landmark className="w-4 h-4" />
+          Banking Details
         </button>
         <button
           onClick={() => {
@@ -289,6 +361,141 @@ const Profile = () => {
                 </div>
               </div>
 
+              {/* Banking details summary */}
+              <div className="space-y-4 pt-4 border-t border-gray-100">
+                <h3 className="text-gray-800 font-extrabold text-base flex items-center gap-2">
+                  <Landmark className="w-5 h-5 text-gray-400" />
+                  Payroll Bank Account
+                </h3>
+                
+                {profile.bankDetails?.accountNumber ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Bank Name</p>
+                      <p className="text-sm font-semibold text-gray-900">{profile.bankDetails.bankName}</p>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Account Number</p>
+                      <p className="text-sm font-mono text-gray-900">
+                        {`•••• •••• •••• ${profile.bankDetails.accountNumber.slice(-4)}`}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+                    <div className="text-left">
+                      <h4 className="text-xs font-black text-amber-850 uppercase tracking-wider">Missing Bank Details</h4>
+                      <p className="text-[10px] text-amber-750 font-semibold mt-0.5">Please navigate to the "Banking Details" tab to register your bank account details. This is required for HR to calculate and disburse your payroll.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
+          {activeTab === "banking" && (
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-6">
+              <div className="border-b border-gray-100 pb-3">
+                <h3 className="text-gray-800 font-extrabold text-base flex items-center gap-2">
+                  <Landmark className="w-5 h-5 text-gray-400" />
+                  Configure Bank Account Details
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">Provide your banking particulars to enable payroll direct deposit processing</p>
+              </div>
+
+              {bankError && (
+                <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-xl flex items-center gap-2">
+                  <AlertCircle className="w-4.5 h-4.5 shrink-0" />
+                  <span>{bankError}</span>
+                </div>
+              )}
+
+              {bankSuccess && (
+                <div className="p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl flex items-center gap-2 animate-bounce-short">
+                  <Check className="w-4 h-4 text-emerald-500" />
+                  <span>{bankSuccess}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleBankSubmit} className="space-y-4 text-left">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Account Holder Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. John Doe"
+                    value={bankForm.accountHolderName}
+                    onChange={(e) => setBankForm({ ...bankForm, accountHolderName: e.target.value })}
+                    className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium text-gray-900"
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Bank Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. HDFC Bank"
+                      value={bankForm.bankName}
+                      onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
+                      className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium text-gray-900"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Branch Name</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Silicon Valley Branch"
+                      value={bankForm.branchName}
+                      onChange={(e) => setBankForm({ ...bankForm, branchName: e.target.value })}
+                      className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-medium text-gray-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">Account Number</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 50100412345678"
+                      value={bankForm.accountNumber}
+                      onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value })}
+                      className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-mono font-medium text-gray-900"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider">IFSC / BIC Code</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. HDFC0001234"
+                      value={bankForm.ifscCode}
+                      onChange={(e) => setBankForm({ ...bankForm, ifscCode: e.target.value })}
+                      className="w-full border border-gray-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none font-mono font-medium text-gray-900"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={bankSubmitting}
+                  className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75 disabled:cursor-wait"
+                >
+                  {bankSubmitting ? (
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Check className="w-4 h-4" />
+                  )}
+                  {bankSubmitting ? "Updating..." : "Save Banking Details"}
+                </button>
+              </form>
             </div>
           )}
 

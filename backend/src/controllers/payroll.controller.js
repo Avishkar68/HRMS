@@ -69,7 +69,7 @@ export const getPayrollList = async (req, res) => {
     if (userId) filter.userId = userId;
 
     const payrolls = await Payroll.find(filter)
-      .populate("userId", "name email role")
+      .populate("userId", "name email role bankDetails")
       .sort({ year: -1, month: -1 })
       .lean();
     res.json(payrolls);
@@ -88,6 +88,21 @@ export const createPayroll = async (req, res) => {
     const allow = allowances || 0;
     const deduct = deductions || 0;
     const net = Number(baseSalary) + allow - deduct;
+
+    // Verify employee exists and has bank details filled in
+    const employee = await User.findById(userId);
+    if (!employee) return res.status(404).json({ message: "Employee not found" });
+    
+    if (
+      !employee.bankDetails ||
+      !employee.bankDetails.bankName ||
+      !employee.bankDetails.accountNumber ||
+      !employee.bankDetails.ifscCode
+    ) {
+      return res.status(400).json({
+        message: `Cannot process payroll. ${employee.name} has not configured bank details in their profile.`
+      });
+    }
 
     const exists = await Payroll.findOne({
       companyId: req.user.companyId,
@@ -132,7 +147,7 @@ export const getMyPayslips = async (req, res) => {
 export const updatePayrollStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, paymentMethod, transactionId } = req.body;
     if (!["draft", "processed", "paid"].includes(status))
       return res.status(400).json({ message: "Invalid status" });
 
@@ -141,8 +156,17 @@ export const updatePayrollStatus = async (req, res) => {
       companyId: req.user.companyId,
     });
     if (!payroll) return res.status(404).json({ message: "Payroll not found" });
+    
     payroll.status = status;
-    if (status === "paid") payroll.paidAt = new Date();
+    if (status === "paid") {
+      if (!paymentMethod || !transactionId) {
+        return res.status(400).json({ message: "Payment method and Transaction reference ID are required to mark payroll as paid" });
+      }
+      payroll.paymentMethod = paymentMethod;
+      payroll.transactionId = transactionId;
+      payroll.paidAt = new Date();
+    }
+    
     await payroll.save();
     res.json(payroll);
   } catch (error) {

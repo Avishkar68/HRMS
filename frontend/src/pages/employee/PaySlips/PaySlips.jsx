@@ -13,7 +13,8 @@ import {
   Building,
   User,
   ArrowDownRight,
-  ArrowUpRight
+  ArrowUpRight,
+  Landmark
 } from "lucide-react";
 
 const PaySlips = () => {
@@ -285,7 +286,45 @@ const PaySlips = () => {
                 <div className="space-y-1 text-right sm:text-left sm:pl-8">
                   <p className="flex justify-between sm:justify-start gap-2"><span className="text-gray-400 font-semibold w-24">Statement Date:</span> <span className="font-bold text-gray-700">{selectedSlip.paidAt ? new Date(selectedSlip.paidAt).toLocaleDateString() : "Pending"}</span></p>
                   <p className="flex justify-between sm:justify-start gap-2"><span className="text-gray-400 font-semibold w-24">Payment Status:</span> <span className="font-bold uppercase text-emerald-600">{selectedSlip.status}</span></p>
-                  <p className="flex justify-between sm:justify-start gap-2"><span className="text-gray-400 font-semibold w-24">Payment Method:</span> <span className="font-bold text-gray-700">Bank Transfer</span></p>
+                  <p className="flex justify-between sm:justify-start gap-2"><span className="text-gray-400 font-semibold w-24">Payment Method:</span> <span className="font-bold text-gray-700 capitalize">{selectedSlip.paymentMethod || "Bank Transfer"}</span></p>
+                </div>
+              </div>
+
+              {/* Disbursement & Bank Details Block */}
+              <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 text-xs space-y-2">
+                <h5 className="font-black text-gray-800 text-xs uppercase tracking-wider border-b border-gray-100 pb-2 flex items-center gap-1.5">
+                  <Landmark className="w-3.5 h-3.5 text-gray-500" />
+                  Disbursement & Bank Details
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1.5 pt-1">
+                  <div className="flex justify-between sm:justify-start sm:gap-2">
+                    <span className="text-gray-450 font-semibold w-28 text-left">Bank Name:</span>
+                    <span className="font-bold text-gray-800">{profile?.bankDetails?.bankName || "—"}</span>
+                  </div>
+                  <div className="flex justify-between sm:justify-start sm:gap-2">
+                    <span className="text-gray-450 font-semibold w-28 text-left">Branch Name:</span>
+                    <span className="font-bold text-gray-800">{profile?.bankDetails?.branchName || "—"}</span>
+                  </div>
+                  <div className="flex justify-between sm:justify-start sm:gap-2">
+                    <span className="text-gray-450 font-semibold w-28 text-left">Account Number:</span>
+                    <span className="font-mono font-bold text-gray-800">
+                      {profile?.bankDetails?.accountNumber ? `•••• •••• •••• ${profile.bankDetails.accountNumber.slice(-4)}` : "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between sm:justify-start sm:gap-2">
+                    <span className="text-gray-450 font-semibold w-28 text-left">IFSC Code:</span>
+                    <span className="font-mono font-bold text-gray-800">{profile?.bankDetails?.ifscCode || "—"}</span>
+                  </div>
+                  <div className="flex justify-between sm:justify-start sm:gap-2">
+                    <span className="text-gray-450 font-semibold w-28 text-left">Transaction ID:</span>
+                    <span className="font-mono font-bold text-indigo-650">{selectedSlip.transactionId || "—"}</span>
+                  </div>
+                  <div className="flex justify-between sm:justify-start sm:gap-2">
+                    <span className="text-gray-450 font-semibold w-28 text-left">Disbursement Date:</span>
+                    <span className="font-bold text-gray-800">
+                      {selectedSlip.paidAt ? new Date(selectedSlip.paidAt).toLocaleDateString() : "—"}
+                    </span>
+                  </div>
                 </div>
               </div>
 

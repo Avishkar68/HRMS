@@ -12,7 +12,9 @@ import {
   X,
   CreditCard,
   CheckCircle,
-  FileText
+  FileText,
+  Landmark,
+  FileCheck
 } from "lucide-react";
 
 const statusColor = (s) => {
@@ -30,6 +32,14 @@ const Payroll = () => {
   const [calculating, setCalculating] = useState(false);
   const [calculation, setCalculation] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  
+  // Payment confirmation states
+  const [payingPayroll, setPayingPayroll] = useState(null);
+  const [paymentForm, setPaymentForm] = useState({
+    paymentMethod: "Bank Transfer",
+    transactionId: ""
+  });
+
   const [form, setForm] = useState({
     userId: "",
     month: new Date().toISOString().slice(0, 7),
@@ -51,6 +61,7 @@ const Payroll = () => {
   const fetchUsers = async () => {
     try {
       const res = await api.get("/admin/users");
+      // Load all employees/managers
       setUsers((res.data || []).filter((u) => u.role === "employee" || u.role === "manager"));
     } catch (err) {
       console.error(err);
@@ -103,6 +114,7 @@ const Payroll = () => {
         alert("Employee, month and base salary (or use Calculate) required.");
         return;
       }
+
       await api.post("/payroll", {
         userId: form.userId,
         month: form.month,
@@ -111,6 +123,7 @@ const Payroll = () => {
         allowances: allow,
         deductions: deduct,
       });
+
       alert("Payroll created successfully.");
       setOpen(false);
       setCalculation(null);
@@ -135,6 +148,29 @@ const Payroll = () => {
       await fetchPayrolls();
     } catch (err) {
       alert(err.response?.data?.message || "Error");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleMarkPaidSubmit = async (e) => {
+    e.preventDefault();
+    if (!paymentForm.transactionId.trim()) {
+      alert("Please enter a valid Transaction reference ID.");
+      return;
+    }
+    setUpdatingId(payingPayroll._id);
+    try {
+      await api.patch(`/payroll/${payingPayroll._id}`, {
+        status: "paid",
+        paymentMethod: paymentForm.paymentMethod,
+        transactionId: paymentForm.transactionId
+      });
+      setPayingPayroll(null);
+      setPaymentForm({ paymentMethod: "Bank Transfer", transactionId: "" });
+      await fetchPayrolls();
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to disburse payment.");
     } finally {
       setUpdatingId(null);
     }
@@ -176,6 +212,10 @@ const Payroll = () => {
   const processedCount = payrolls.filter(p => p.status === "processed").length;
   const paidCount = payrolls.filter(p => p.status === "paid").length;
 
+  // Selected user banking check
+  const selectedUserObj = users.find((u) => u._id === form.userId);
+  const isSelectedUserBankFilled = selectedUserObj?.bankDetails?.bankName && selectedUserObj?.bankDetails?.accountNumber && selectedUserObj?.bankDetails?.ifscCode;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -185,7 +225,7 @@ const Payroll = () => {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -250,6 +290,9 @@ const Payroll = () => {
               <tbody className="divide-y divide-gray-200">
                 {payrolls.map((p) => {
                   const empName = p.userId?.name || "Unassigned Employee";
+                  const employeeObj = p.userId;
+                  const isBankFilled = employeeObj?.bankDetails?.bankName && employeeObj?.bankDetails?.accountNumber && employeeObj?.bankDetails?.ifscCode;
+
                   return (
                     <tr key={p._id} className="hover:bg-indigo-50/10 transition-colors">
                       <td className="p-4 font-medium text-gray-900 flex items-center gap-3">
@@ -259,12 +302,17 @@ const Payroll = () => {
                         <div>
                           <p className="font-bold text-gray-955">{empName}</p>
                           <p className="text-[10px] text-gray-450 font-mono">ID: {p.userId?._id || p.userId}</p>
+                          {!isBankFilled && (
+                            <span className="inline-flex items-center gap-1 mt-1 text-[9px] bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
+                              No Bank Details
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="p-4 text-center text-gray-600 font-mono font-medium">{p.month} / {p.year}</td>
-                      <td className="p-4 text-right text-gray-600 font-mono">₹{p.baseSalary?.toLocaleString() ?? 0}</td>
+                      <td className="p-4 text-right text-gray-650 font-mono">₹{p.baseSalary?.toLocaleString() ?? 0}</td>
                       <td className="p-4 text-right text-gray-650 font-mono">₹{p.allowances?.toLocaleString() ?? 0}</td>
-                      <td className="p-4 text-right font-black text-gray-950 font-mono">₹{p.netSalary?.toLocaleString() ?? 0}</td>
+                      <td className="p-4 text-right font-black text-gray-955 font-mono">₹{p.netSalary?.toLocaleString() ?? 0}</td>
                       <td className="p-4 text-center">
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${statusColor(p.status)}`}>
                           {p.status}
@@ -276,15 +324,26 @@ const Payroll = () => {
                             <>
                               <button
                                 onClick={() => updateStatus(p._id, "processed")}
-                                disabled={updatingId !== null}
-                                className="px-3 py-1.5 bg-indigo-55 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
+                                disabled={updatingId !== null || !isBankFilled}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer border ${
+                                  !isBankFilled 
+                                    ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed opacity-60" 
+                                    : "bg-indigo-50 border-indigo-200 hover:bg-indigo-100 text-indigo-750"
+                                }`}
                               >
                                 Process
                               </button>
                               <button
-                                onClick={() => updateStatus(p._id, "paid")}
-                                disabled={updatingId !== null}
-                                className="px-3 py-1.5 bg-emerald-55 border border-emerald-250 hover:bg-emerald-100/70 text-emerald-700 rounded-xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
+                                onClick={() => {
+                                  setPayingPayroll(p);
+                                  setPaymentForm({ paymentMethod: "Bank Transfer", transactionId: "" });
+                                }}
+                                disabled={updatingId !== null || !isBankFilled}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer border ${
+                                  !isBankFilled 
+                                    ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed opacity-60" 
+                                    : "bg-emerald-50 border-emerald-250 hover:bg-emerald-100/70 text-emerald-750"
+                                }`}
                               >
                                 Mark Paid
                               </button>
@@ -292,12 +351,25 @@ const Payroll = () => {
                           )}
                           {p.status === "processed" && (
                             <button
-                              onClick={() => updateStatus(p._id, "paid")}
-                              disabled={updatingId !== null}
-                              className="px-3 py-1.5 bg-emerald-55 border border-emerald-250 hover:bg-emerald-100/70 text-emerald-700 rounded-xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer"
+                              onClick={() => {
+                                setPayingPayroll(p);
+                                setPaymentForm({ paymentMethod: "Bank Transfer", transactionId: "" });
+                              }}
+                              disabled={updatingId !== null || !isBankFilled}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all active:scale-[0.98] cursor-pointer border ${
+                                !isBankFilled 
+                                  ? "bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed opacity-60" 
+                                  : "bg-emerald-50 border-emerald-250 hover:bg-emerald-100/70 text-emerald-755"
+                              }`}
                             >
                               Mark Paid
                             </button>
+                          )}
+                          {p.status === "paid" && (
+                            <div className="text-right">
+                              <span className="text-[10px] text-gray-450 block font-bold">Via {p.paymentMethod || "Bank"}</span>
+                              <span className="text-[9px] text-indigo-650 block font-mono">Ref: {p.transactionId || "—"}</span>
+                            </div>
                           )}
                         </div>
                       </td>
@@ -339,7 +411,7 @@ const Payroll = () => {
                     name="userId"
                     value={form.userId}
                     onChange={handleChange}
-                    className="w-full border border-gray-250 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer appearance-none"
+                    className="w-full border border-gray-250 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer appearance-none outline-none font-medium"
                     required
                   >
                     <option value="">Select employee</option>
@@ -350,6 +422,16 @@ const Payroll = () => {
                 </div>
               </div>
 
+              {form.userId && !isSelectedUserBankFilled && (
+                <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 text-xs font-semibold rounded-2xl flex items-start gap-2">
+                  <AlertCircle className="w-5 h-5 shrink-0 text-rose-500 mt-0.5" />
+                  <div className="text-left">
+                    <h4 className="font-extrabold uppercase tracking-wider text-xs">Payroll Blocked</h4>
+                    <p className="text-[10px] text-rose-600 leading-normal mt-0.5">This employee has not registered their bank details (Bank Name, Account Number, and IFSC) in their profile. They must log in and set up bank details in their portal before payroll can be generated.</p>
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Billing Month</label>
                 <div className="relative">
@@ -359,7 +441,7 @@ const Payroll = () => {
                     name="month"
                     value={form.month}
                     onChange={handleChange}
-                    className="w-full border border-gray-250 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer"
+                    className="w-full border border-gray-250 rounded-xl pl-9 pr-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer outline-none"
                   />
                 </div>
               </div>
@@ -381,21 +463,21 @@ const Payroll = () => {
                       onChange={handleChange}
                       placeholder="e.g. 30000"
                       min="0"
-                      className="w-full border border-amber-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white"
+                      className="w-full border border-amber-200 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-amber-500 focus:border-amber-500 bg-white outline-none"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleCalculate}
                     disabled={calculating || !form.userId || !form.month || !form.monthlyBaseSalary}
-                    className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed text-xs transition-all active:scale-[0.98]"
+                    className="px-4 py-2.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold disabled:opacity-40 disabled:cursor-not-allowed text-xs transition-all active:scale-[0.98] cursor-pointer"
                   >
                     {calculating ? "Calculating…" : "Calculate"}
                   </button>
                 </div>
 
                 {calculation && (
-                  <div className="pt-3 border-t border-amber-200/60 text-xs text-amber-850 space-y-1">
+                  <div className="pt-3 border-t border-amber-200/60 text-xs text-amber-850 space-y-1 text-left">
                     <p><strong>Present Days:</strong> {calculation.presentDays} Days</p>
                     <p><strong>Working Days in Month:</strong> {calculation.workingDays} Days</p>
                     <p className="text-sm font-black text-amber-900 pt-0.5">Calculated Base Amount: ₹{calculation.calculatedBaseAmount?.toLocaleString()}</p>
@@ -413,7 +495,7 @@ const Payroll = () => {
                     onChange={handleChange}
                     placeholder="Base Amount"
                     min="0"
-                    className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white outline-none font-medium"
                   />
                 </div>
                 <div>
@@ -425,7 +507,7 @@ const Payroll = () => {
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white outline-none font-medium"
                   />
                 </div>
                 <div>
@@ -437,14 +519,14 @@ const Payroll = () => {
                     onChange={handleChange}
                     placeholder="0"
                     min="0"
-                    className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white"
+                    className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white outline-none font-medium"
                   />
                 </div>
               </div>
 
               <div className="p-4 bg-gray-50 rounded-2xl border border-gray-150 flex items-center justify-between">
                 <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">Estimated Net Payment</span>
-                <strong className="text-gray-950 font-black text-base font-mono">₹{netAmount().toLocaleString()}</strong>
+                <strong className="text-gray-955 font-black text-base font-mono">₹{netAmount().toLocaleString()}</strong>
               </div>
             </div>
 
@@ -460,12 +542,107 @@ const Payroll = () => {
               <button
                 type="button"
                 onClick={handleCreate}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 transition-all active:scale-[0.98] cursor-pointer text-center"
+                disabled={!form.userId || !isSelectedUserBankFilled}
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-bold shadow-md shadow-indigo-600/10 transition-all active:scale-[0.98] cursor-pointer text-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Create Payroll
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Payment Modal */}
+      {payingPayroll && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border border-gray-100 max-h-[90vh] overflow-y-auto animate-fade-in flex flex-col">
+            <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-extrabold text-gray-900">Confirm Disbursement</h2>
+                <p className="text-gray-500 text-xs mt-0.5">Disburse Net Salary: ₹{payingPayroll.netSalary?.toLocaleString()}</p>
+              </div>
+              <button 
+                onClick={() => setPayingPayroll(null)} 
+                className="p-1.5 hover:bg-gray-200 rounded-xl text-gray-400 hover:text-gray-655 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 text-left">
+              {/* Employee Bank Info Card */}
+              <div className="p-4.5 bg-slate-50 border border-gray-150 rounded-2xl space-y-2.5">
+                <span className="text-[10px] text-gray-400 font-extrabold uppercase tracking-wider block">Target Bank Account Details</span>
+                <div className="text-xs space-y-1.5 text-gray-700">
+                  <p className="flex justify-between">
+                    <span className="font-semibold text-gray-400">Holder Name:</span>
+                    <strong className="text-gray-900">{payingPayroll.userId?.bankDetails?.accountHolderName || payingPayroll.userId?.name}</strong>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="font-semibold text-gray-400">Bank Name:</span>
+                    <strong className="text-gray-900">{payingPayroll.userId?.bankDetails?.bankName}</strong>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="font-semibold text-gray-400">Account Number:</span>
+                    <strong className="font-mono text-indigo-700">{payingPayroll.userId?.bankDetails?.accountNumber}</strong>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="font-semibold text-gray-400">IFSC Code:</span>
+                    <strong className="font-mono text-gray-900">{payingPayroll.userId?.bankDetails?.ifscCode}</strong>
+                  </p>
+                  <p className="flex justify-between">
+                    <span className="font-semibold text-gray-400">Branch Name:</span>
+                    <strong className="text-gray-900">{payingPayroll.userId?.bankDetails?.branchName || "—"}</strong>
+                  </p>
+                </div>
+              </div>
+
+              <form onSubmit={handleMarkPaidSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Disbursement Method</label>
+                  <select
+                    value={paymentForm.paymentMethod}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, paymentMethod: e.target.value })}
+                    className="w-full border border-gray-250 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white cursor-pointer outline-none font-medium"
+                    required
+                  >
+                    <option value="Bank Transfer">Bank Transfer (Direct Deposit)</option>
+                    <option value="UPI">UPI Payment</option>
+                    <option value="Check">Corporate Check</option>
+                    <option value="Cash">Cash Disbursement</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Transaction Ref / ID / Receipt #</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. TXN9876543210"
+                    value={paymentForm.transactionId}
+                    onChange={(e) => setPaymentForm({ ...paymentForm, transactionId: e.target.value })}
+                    className="w-full border border-gray-250 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-mono outline-none"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setPayingPayroll(null)}
+                    className="flex-1 border border-gray-250 text-gray-700 py-2.5 rounded-xl text-xs font-bold hover:bg-gray-50 transition-all active:scale-[0.98] cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold shadow-md shadow-emerald-600/10 transition-all active:scale-[0.98] cursor-pointer"
+                  >
+                    Confirm Payment
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}

@@ -38,6 +38,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["active", "inactive"],
       default: "active"
+    },
+
+    bankDetails: {
+      bankName: { type: String, default: "" },
+      accountNumber: { type: String, default: "" },
+      ifscCode: { type: String, default: "" },
+      accountHolderName: { type: String, default: "" },
+      branchName: { type: String, default: "" }
     }
   },
   { timestamps: true }

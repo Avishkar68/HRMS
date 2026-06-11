@@ -109,3 +109,35 @@ export const changePassword = async (req, res) => {
   }
 };
 
+/* ================= UPDATE PROFILE (INCLUDING BANK DETAILS) ================= */
+export const updateProfile = async (req, res) => {
+  try {
+    const { name, bankDetails } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    if (name) user.name = name;
+    if (bankDetails) {
+      user.bankDetails = {
+        bankName: bankDetails.bankName || "",
+        accountNumber: bankDetails.accountNumber || "",
+        ifscCode: bankDetails.ifscCode || "",
+        accountHolderName: bankDetails.accountHolderName || "",
+        branchName: bankDetails.branchName || ""
+      };
+    }
+
+    await user.save();
+
+    const populated = await User.findById(user._id)
+      .select("-passwordHash")
+      .populate("managerId", "name email")
+      .lean();
+
+    res.json(populated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+

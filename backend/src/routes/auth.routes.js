@@ -1,5 +1,5 @@
 import express from "express";
-import { login, superAdminLogin, getMe, changePassword } from "../controllers/auth.controller.js";
+import { login, superAdminLogin, getMe, changePassword, updateProfile } from "../controllers/auth.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 import { allowRoles } from "../middleware/role.middleware.js";
 
@@ -9,5 +9,6 @@ router.get("/me", protect, allowRoles("employee", "manager", "admin"), getMe);
 router.post("/login", login);
 router.post("/superadmin/login", superAdminLogin);
 router.put("/change-password", protect, allowRoles("employee", "manager", "admin"), changePassword);
+router.put("/profile", protect, allowRoles("employee", "manager", "admin"), updateProfile);
 
 export default router;

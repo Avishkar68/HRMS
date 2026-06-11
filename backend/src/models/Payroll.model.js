@@ -42,6 +42,14 @@ const payrollSchema = new mongoose.Schema(
       enum: ["draft", "processed", "paid"],
       default: "draft",
     },
+    paymentMethod: {
+      type: String,
+      default: "",
+    },
+    transactionId: {
+      type: String,
+      default: "",
+    },
     paidAt: {
       type: Date,
       default: null,
