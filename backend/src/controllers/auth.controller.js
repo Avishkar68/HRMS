@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 import User from "../models/User.model.js";
 import SuperAdmin from "../models/SuperAdmin.model.js";
-import Company from "../models/Company.model.js";
 import { generateToken } from "../utils/jwt.js";
 
 /* ================= GET CURRENT USER (EMPLOYEE/MANAGER/ADMIN) ================= */
@@ -24,25 +23,31 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    console.log(`[LOGIN DEBUG] Incoming email: ${JSON.stringify(email)}, password length: ${password?.length}`);
+    if (password) {
+      const charCodes = [];
+      for (let i = 0; i < password.length; i++) {
+        charCodes.push(password.charCodeAt(i));
+      }
+      console.log(`[LOGIN DEBUG] Password char codes:`, charCodes);
+    }
+
     const user = await User.findOne({ email });
-    if (!user)
+    if (!user) {
+      console.log(`[LOGIN DEBUG] User not found for email: ${email}`);
       return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-    if (user.status !== "active")
+    console.log(`[LOGIN DEBUG] Found user: ${user.name}, role: ${user.role}, hash: ${user.passwordHash}`);
+
+    if (user.status !== "active") {
+      console.log(`[LOGIN DEBUG] User status is inactive: ${user.status}`);
       return res.status(403).json({ message: "Account inactive" });
-
-    // Enforce Company Subscription Access Gating
-    const company = await Company.findById(user.companyId);
-    if (!company)
-      return res.status(403).json({ message: "Company not found" });
-
-    if (company.status !== "active")
-      return res.status(403).json({ message: "Company account is suspended/inactive" });
-
-    if (company.plan !== "premium")
-      return res.status(403).json({ message: "Premium subscription required to access the system" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
+    console.log(`[LOGIN DEBUG] bcrypt.compare match result: ${isMatch}`);
+
     if (!isMatch)
       return res.status(401).json({ message: "Invalid credentials" });
 

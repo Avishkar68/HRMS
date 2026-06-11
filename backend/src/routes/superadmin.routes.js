@@ -1,5 +1,5 @@
 import express from "express";
-import { createCompany, getCompanies, getUsage, updateCompany } from "../controllers/superadmin.controller.js";
+import { createCompany, getCompanies, getUsage } from "../controllers/superadmin.controller.js";
 import { protect } from "../middleware/auth.middleware.js";
 import { allowRoles } from "../middleware/role.middleware.js";
 
@@ -13,13 +13,6 @@ router.post(
     protect,
     allowRoles("superadmin"),
     createCompany
-);
-
-router.patch(
-    "/company/:id",
-    protect,
-    allowRoles("superadmin"),
-    updateCompany
 );
 
 export default router;

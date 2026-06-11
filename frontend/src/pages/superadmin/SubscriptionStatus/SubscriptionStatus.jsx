@@ -15,12 +15,6 @@ import {
 const SubscriptionStatus = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState(null);
-
-  const showNotification = (message, type = "success") => {
-    setNotification({ message, type });
-    setTimeout(() => setNotification(null), 3000);
-  };
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -35,29 +29,6 @@ const SubscriptionStatus = () => {
     };
     fetchCompanies();
   }, []);
-
-  const handleUpdateCompany = async (companyId, fields) => {
-    try {
-      // Optimistic update
-      setCompanies((prev) =>
-        prev.map((c) => (c._id === companyId ? { ...c, ...fields } : c))
-      );
-
-      await api.patch(`/superadmin/company/${companyId}`, fields);
-      showNotification(`Company updated successfully`, "success");
-    } catch (err) {
-      console.error(err);
-      showNotification(err.response?.data?.message || "Failed to update company", "error");
-      
-      // Revert change by refetching
-      try {
-        const res = await api.get("/superadmin/companies");
-        setCompanies(res.data || []);
-      } catch (fetchErr) {
-        console.error("Failed to revert state", fetchErr);
-      }
-    }
-  };
 
   const getInitials = (name) => {
     return name
@@ -81,24 +52,7 @@ const SubscriptionStatus = () => {
   const premiumCount = companies.filter((c) => (c.plan || "basic") === "premium").length;
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto relative">
-      
-      {/* Toast Notification */}
-      {notification && (
-        <div className={`fixed top-6 right-6 z-50 p-4 rounded-2xl border shadow-xl flex items-center gap-3 animate-fade-in transition-all ${
-          notification.type === "success" 
-            ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
-            : "bg-rose-50 border-rose-200 text-rose-800"
-        }`}>
-          {notification.type === "success" ? (
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-          ) : (
-            <ShieldAlert className="w-5 h-5 text-rose-600 flex-shrink-0" />
-          )}
-          <span className="text-xs font-bold">{notification.message}</span>
-        </div>
-      )}
-
+    <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -189,32 +143,22 @@ const SubscriptionStatus = () => {
                         </span>
                       </td>
                       <td className="p-4">
-                        <select
-                          value={plan}
-                          onChange={(e) => handleUpdateCompany(c._id, { plan: e.target.value })}
-                          className={`px-2.5 py-1 rounded-lg text-xs font-extrabold uppercase font-mono border bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer ${
-                            plan === "premium" 
-                              ? "bg-amber-50 text-amber-700 border-amber-150" 
-                              : "bg-gray-50 text-gray-600 border-gray-200"
-                          }`}
-                        >
-                          <option value="basic">basic</option>
-                          <option value="premium">premium</option>
-                        </select>
+                        <span className={`inline-flex px-2.5 py-0.5 rounded-lg text-xs font-extrabold uppercase font-mono border ${
+                          plan === "premium" 
+                            ? "bg-amber-50 text-amber-700 border-amber-150" 
+                            : "bg-gray-50 text-gray-600 border-gray-200"
+                        }`}>
+                          {plan}
+                        </span>
                       </td>
                       <td className="p-4 text-center">
-                        <select
-                          value={status}
-                          onChange={(e) => handleUpdateCompany(c._id, { status: e.target.value })}
-                          className={`px-3 py-1 rounded-full text-xs font-bold border capitalize bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer ${
-                            status === "active"
-                              ? "bg-emerald-50 text-emerald-700 border-emerald-150"
-                              : "bg-rose-50 text-rose-700 border-rose-150"
-                          }`}
-                        >
-                          <option value="active">active</option>
-                          <option value="inactive">inactive</option>
-                        </select>
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold border capitalize ${
+                          status === "active"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-150"
+                            : "bg-rose-50 text-rose-700 border-rose-150"
+                        }`}>
+                          {status}
+                        </span>
                       </td>
                     </tr>
                   );

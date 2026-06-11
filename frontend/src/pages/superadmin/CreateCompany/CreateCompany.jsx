@@ -20,9 +20,7 @@ const CreateCompany = () => {
     domain: "",
     adminName: "",
     adminEmail: "",
-    adminPassword: "",
-    plan: "basic",
-    status: "active"
+    adminPassword: ""
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -106,34 +104,6 @@ const CreateCompany = () => {
                   onChange={handleChange}
                   required
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] text-gray-405 font-bold uppercase tracking-wider mb-1">Subscription Plan</label>
-                <select
-                  name="plan"
-                  className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-semibold capitalize"
-                  value={form.plan}
-                  onChange={handleChange}
-                >
-                  <option value="basic">Basic (Standard)</option>
-                  <option value="premium">Premium Tier</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] text-gray-405 font-bold uppercase tracking-wider mb-1">Access Status</label>
-                <select
-                  name="status"
-                  className="w-full border border-gray-250 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white font-semibold capitalize"
-                  value={form.status}
-                  onChange={handleChange}
-                >
-                  <option value="active">Active</option>
-                  <option value="inactive">Inactive</option>
-                </select>
               </div>
             </div>
           </div>
