@@ -11,10 +11,40 @@ const getLocalDateString = () => {
   return new Date(now - offsetMs).toISOString().split("T")[0];
 };
 
+const OFFICE_LAT = 19.226636;
+const OFFICE_LNG = 73.132174;
+const ALLOWED_RANGE_M = 200;
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371000; // Radius of the earth in m
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in m
+};
+
 /* ================= CHECK IN ================= */
 export const checkIn = async (req, res) => {
   try {
     const { lat, lng, accuracy } = req.body;
+    
+    if (!lat || !lng) {
+      return res.status(400).json({ message: "Location information is required to check in" });
+    }
+
+    const distance = calculateDistance(Number(lat), Number(lng), OFFICE_LAT, OFFICE_LNG);
+    if (distance > ALLOWED_RANGE_M) {
+      return res.status(400).json({
+        message: `Out of range. You must be within ${ALLOWED_RANGE_M} meters of the office to check in. (Current distance: ${Math.round(distance)}m)`
+      });
+    }
+
     const today = getLocalDateString();
 
     const existing = await Attendance.findOne({

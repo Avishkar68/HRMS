@@ -16,13 +16,35 @@ import {
   Briefcase
 } from "lucide-react";
 
+const OFFICE_LAT = 19.226636;
+const OFFICE_LNG = 73.132174;
+const ALLOWED_RANGE = 200; // in meters
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const R = 6371000; // Earth's radius in meters
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; // Distance in meters
+};
+
 const MarkAttendance = () => {
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
   const [punchLoading, setPunchLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Location & Geofencing states
   const [gpsStatus, setGpsStatus] = useState("idle"); // idle, acquiring, active, failed
-  const [coords, setCoords] = useState(null);
+  const [currentCoords, setCurrentCoords] = useState(null);
+  const [locationError, setLocationError] = useState(null);
+  const [savedCoords, setSavedCoords] = useState(null);
 
   // Live clock update
   useEffect(() => {
@@ -36,8 +58,7 @@ const MarkAttendance = () => {
       const res = await api.get("/attendance/today");
       setStatus(res.data);
       if (res.data && res.data.location) {
-        setCoords(res.data.location);
-        setGpsStatus("active");
+        setSavedCoords(res.data.location);
       }
     } catch (err) {
       console.error(err);
@@ -50,42 +71,73 @@ const MarkAttendance = () => {
     fetchStatus();
   }, []);
 
-  const handleCheckIn = async () => {
+  // Track current location in real-time
+  useEffect(() => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
+      setGpsStatus("failed");
+      setLocationError("Geolocation is not supported by your browser");
       return;
     }
-    
-    setPunchLoading(true);
-    setGpsStatus("acquiring");
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
+    setGpsStatus("acquiring");
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
         const locationData = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
           accuracy: pos.coords.accuracy,
         };
-        setCoords(locationData);
+        setCurrentCoords(locationData);
         setGpsStatus("active");
-
-        try {
-          await api.post("/attendance/check-in", locationData);
-          await fetchStatus();
-        } catch (err) {
-          alert(err.response?.data?.message || "Check-in failed");
-          setGpsStatus("failed");
-        } finally {
-          setPunchLoading(false);
-        }
+        setLocationError(null);
       },
       (error) => {
-        alert("Location permission is required to check in. Please enable GPS and allow location access.");
+        console.error("GPS watch error:", error);
+        let errMsg = "Unable to retrieve your location.";
+        if (error.code === error.PERMISSION_DENIED) {
+          errMsg = "Location permission denied. Please allow access in browser settings to check in.";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errMsg = "GPS position unavailable. Try moving to a clearer area.";
+        } else if (error.code === error.TIMEOUT) {
+          errMsg = "GPS request timed out. Please try again.";
+        }
         setGpsStatus("failed");
-        setPunchLoading(false);
+        setLocationError(errMsg);
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+
+  const distance = currentCoords 
+    ? calculateDistance(currentCoords.lat, currentCoords.lng, OFFICE_LAT, OFFICE_LNG) 
+    : null;
+  const isInRange = distance !== null ? distance <= ALLOWED_RANGE : false;
+
+  const handleCheckIn = async () => {
+    if (!currentCoords) {
+      alert("Current location is not available yet. Please wait for GPS to connect.");
+      return;
+    }
+
+    if (!isInRange) {
+      alert("You are out of office range. You cannot mark attendance.");
+      return;
+    }
+    
+    setPunchLoading(true);
+
+    try {
+      await api.post("/attendance/check-in", currentCoords);
+      await fetchStatus();
+    } catch (err) {
+      alert(err.response?.data?.message || "Check-in failed");
+    } finally {
+      setPunchLoading(false);
+    }
   };
 
   const handleCheckOut = async () => {
@@ -124,7 +176,7 @@ const MarkAttendance = () => {
       const hrs = Math.floor(diff / 60);
       const mins = diff % 60;
       return `${hrs}h ${mins}m`;
-    } catch (e) {
+    } catch {
       return null;
     }
   };
@@ -225,7 +277,7 @@ const MarkAttendance = () => {
             </div>
 
             {/* Big Premium Punch Button */}
-            <div className="mt-8 w-full max-w-xs">
+            <div className="mt-8 w-full max-w-xs space-y-3">
               {isOnLeave && (
                 <button
                   disabled
@@ -237,20 +289,55 @@ const MarkAttendance = () => {
               )}
 
               {!status && !isOnLeave && (
-                <button
-                  onClick={handleCheckIn}
-                  disabled={punchLoading}
-                  className={`w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white rounded-2xl font-bold text-base shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${
-                    punchLoading ? "opacity-75 cursor-wait" : "cursor-pointer"
-                  }`}
-                >
-                  {punchLoading ? (
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <Fingerprint className="w-5 h-5 animate-pulse" />
+                <>
+                  <button
+                    onClick={handleCheckIn}
+                    disabled={punchLoading || gpsStatus !== "active" || !isInRange}
+                    className={`w-full py-4 px-6 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${
+                      (gpsStatus === "active" && isInRange)
+                        ? "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
+                        : "bg-gray-100 border border-gray-200 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    {punchLoading ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Fingerprint className={`w-5 h-5 ${gpsStatus === "active" && isInRange ? "animate-pulse" : ""}`} />
+                    )}
+                    {punchLoading ? "Processing..." : "PUNCH IN NOW"}
+                  </button>
+
+                  {/* Range Check Warning Message */}
+                  {gpsStatus === "acquiring" && (
+                    <div className="text-amber-600 text-xs font-semibold flex items-center gap-1.5 justify-center mt-2 animate-pulse font-sans">
+                      <Timer className="w-4 h-4 animate-spin" />
+                      Acquiring GPS location...
+                    </div>
                   )}
-                  {punchLoading ? "Capturing GPS..." : "PUNCH IN NOW"}
-                </button>
+                  {gpsStatus === "failed" && (
+                    <div className="text-rose-600 text-xs font-semibold flex items-center gap-1.5 justify-center mt-2 font-sans bg-rose-50 border border-rose-100 p-2.5 rounded-xl">
+                      <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                      <span>{locationError || "GPS verification failed."}</span>
+                    </div>
+                  )}
+                  {gpsStatus === "active" && !isInRange && (
+                    <div className="text-rose-600 text-xs font-semibold flex flex-col gap-1 items-center justify-center mt-2 text-center bg-rose-50 border border-rose-100 p-2.5 rounded-xl font-sans">
+                      <div className="flex items-center gap-1.5">
+                        <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0" />
+                        <span className="font-bold">Out of Office Range ({Math.round(distance)}m)</span>
+                      </div>
+                      <span className="text-[10px] text-rose-500 leading-normal">
+                        You must be within 200m of Kalyan office to check in.
+                      </span>
+                    </div>
+                  )}
+                  {gpsStatus === "active" && isInRange && (
+                    <div className="text-emerald-600 text-xs font-semibold flex items-center gap-1.5 justify-center mt-2 font-sans">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                      <span>In Range ({Math.round(distance)}m away) — Ready</span>
+                    </div>
+                  )}
+                </>
               )}
 
               {isCheckedIn && !isCheckedOut && (
@@ -379,28 +466,62 @@ const MarkAttendance = () => {
                 </span>
               </div>
 
-              {coords ? (
+              {(status && savedCoords) ? (
                 <div className="text-xs text-gray-600 space-y-1.5 font-mono border-t border-gray-200/50 pt-2.5">
-                  <p className="flex justify-between"><span className="text-gray-400">Latitude:</span> {coords.lat.toFixed(6)}</p>
-                  <p className="flex justify-between"><span className="text-gray-400">Longitude:</span> {coords.lng.toFixed(6)}</p>
-                  {coords.accuracy && (
-                    <p className="flex justify-between"><span className="text-gray-400">Accuracy:</span> ±{Math.round(coords.accuracy)} meters</p>
+                  <p className="font-sans font-bold text-indigo-600 text-[11px] mb-1">Captured Punch-In Location:</p>
+                  <p className="flex justify-between"><span className="text-gray-400">Latitude:</span> {savedCoords.lat.toFixed(6)}</p>
+                  <p className="flex justify-between"><span className="text-gray-400">Longitude:</span> {savedCoords.lng.toFixed(6)}</p>
+                  {savedCoords.accuracy && (
+                    <p className="flex justify-between"><span className="text-gray-400">Accuracy:</span> ±{Math.round(savedCoords.accuracy)} meters</p>
                   )}
                   
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`}
+                    href={`https://www.google.com/maps/search/?api=1&query=${savedCoords.lat},${savedCoords.lng}`}
                     target="_blank"
                     rel="noreferrer"
                     className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 pt-2 hover:underline font-sans"
                   >
                     <Map className="w-3.5 h-3.5" />
-                    Preview location map
+                    Preview saved location
+                  </a>
+                </div>
+              ) : currentCoords ? (
+                <div className="text-xs text-gray-600 space-y-1.5 font-mono border-t border-gray-200/50 pt-2.5">
+                  <p className="font-sans font-bold text-emerald-600 text-[11px] mb-1">Your Live Location:</p>
+                  <p className="flex justify-between"><span className="text-gray-400">Latitude:</span> {currentCoords.lat.toFixed(6)}</p>
+                  <p className="flex justify-between"><span className="text-gray-400">Longitude:</span> {currentCoords.lng.toFixed(6)}</p>
+                  {currentCoords.accuracy && (
+                    <p className="flex justify-between"><span className="text-gray-400">Accuracy:</span> ±{Math.round(currentCoords.accuracy)} meters</p>
+                  )}
+                  {distance !== null && (
+                    <div className="border-t border-gray-100 pt-2.5 font-sans text-xs">
+                      <p className="flex justify-between font-semibold">
+                        <span className="text-gray-500">Distance to Office:</span> 
+                        <span className={isInRange ? "text-emerald-600" : "text-rose-600"}>
+                          {Math.round(distance)} meters
+                        </span>
+                      </p>
+                      <p className="flex justify-between text-gray-400 text-[10px] mt-0.5">
+                        <span>Office Radius Limit:</span>
+                        <span>200 meters</span>
+                      </p>
+                    </div>
+                  )}
+                  
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${currentCoords.lat},${currentCoords.lng}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-600 hover:text-indigo-800 pt-2 hover:underline font-sans"
+                  >
+                    <Map className="w-3.5 h-3.5" />
+                    Preview live location
                   </a>
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-xs text-gray-400 italic">
                   <MapPinOff className="w-4 h-4 text-gray-300" />
-                  Coordinates will be captured on punch-in
+                  {locationError || "Waiting for GPS coordinates..."}
                 </div>
               )}
             </div>
