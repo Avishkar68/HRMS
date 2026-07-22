@@ -2,39 +2,31 @@
 
 Human Resource Management System with role-based access (Super Admin, Admin, Manager, Employee).
 
-## External configs you need
+## 🌐 Live Demo
 
-### Backend (`backend/`)
+🔗 **HRMS Application:**  
+https://hrms-pi-kohl.vercel.app/
 
-1. Copy `backend/.env.example` to `backend/.env`
-2. Set in `.env`:
-   - **MONGO_URI** – MongoDB connection string (e.g. `mongodb://localhost:27017/hrms`)
-   - **JWT_SECRET** – Secret for JWT signing (use a long random string in production)
-   - **PORT** (optional) – Default `3000`
+Or use a clickable button-style link:
 
-3. Create a Super Admin user (one-time):
-   ```bash
-   cd backend && node scripts/createSuperAdmin.js
-   ```
-   Default: `superadmin@hrms.com` / `superadmin123`
+[🚀 Open HRMS Application](https://hrms-pi-kohl.vercel.app/)
 
-### Frontend (`frontend/`)
+---
 
-1. Optional: copy `frontend/.env.example` to `frontend/.env`
-2. Set **VITE_API_URL** only if your API runs elsewhere (default: `http://localhost:3000`)
+## 🔑 Demo Credentials
 
-## Run locally
+### 👨‍💼 Employee
+- **Email:** `avishkar@gmail.com`
+- **Password:** `test123`
 
-```bash
-# Terminal 1 – backend
-cd backend && npm install && npm start
+### 👨‍💼 Manager
+- **Email:** `kartik@gmail.com`
+- **Password:** `test123`
 
-# Terminal 2 – frontend
-cd frontend && npm install && npm run dev
-```
+### 👨‍💼 Admin / HR
+- **Email:** `kakadeavishkar84@gmail.com`
+- **Password:** `test123`
 
-- Backend: http://localhost:3000  
-- Frontend: http://localhost:5173 (or the port Vite prints)
 
 ## Roles
 
