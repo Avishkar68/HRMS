@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RequireRole from "./components/auth/RequireRole";
 
 /* ===== PUBLIC PAGES ===== */
+import Landing from "./pages/public/Landing/Landing";
 import Signin from "./pages/public/Signin/Signin";
 import Signup from "./pages/public/Signup/Signup";
 import SuperAdminLogin from "./pages/public/SuperAdminLogin/SuperAdminLogin";
@@ -71,8 +72,8 @@ function App() {
     <BrowserRouter>
       <Routes>
 
-        {/* ================= DEFAULT ================= */}
-        <Route path="/" element={<Navigate to="/signin" replace />} />
+        {/* ================= DEFAULT / LANDING ================= */}
+        <Route path="/" element={<Landing />} />
 
         {/* ================= PUBLIC ================= */}
         <Route path="/signin" element={<Signin />} />
