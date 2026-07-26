@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { 
   Clock, 
@@ -24,6 +24,19 @@ const Landing = () => {
   // Navigation states
   const [activeDropdown, setActiveDropdown] = useState(null); // 'features', 'resources', 'about', or null
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (navRef.current && !navRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   
   // Testimonial states
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -109,7 +122,7 @@ const Landing = () => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav ref={navRef} className="hidden md:flex items-center space-x-8">
               
               {/* Features Dropdown Link */}
               <div className="relative">
@@ -123,9 +136,6 @@ const Landing = () => {
                 {/* Features Mega Menu Dropdown */}
                 {activeDropdown === "features" && (
                   <>
-                    {/* Click outside overlay */}
-                    <div className="fixed inset-0 z-10" onClick={() => setActiveDropdown(null)} />
-                    
                     <div className="absolute left-1/2 -translate-x-1/2 mt-3 w-[680px] bg-white rounded-2xl shadow-xl border border-[#e2e8f0] p-6 z-20 grid grid-cols-12 gap-6 animate-in fade-in slide-in-from-top-2 duration-200">
                       
                       <div className="col-span-4 space-y-4">
